@@ -1,0 +1,7 @@
+service:
+  host: 127.0.0.1
+  port: 8765
+  workspace: workspace
+  default_tile_size: 512
+  default_overlap: 64
+  fake_adapters: true

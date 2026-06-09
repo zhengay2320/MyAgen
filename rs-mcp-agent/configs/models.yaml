@@ -1,0 +1,40 @@
+models:
+  - id: fake-yolo-sahi
+    task: object_detection
+    backend: fake
+    framework: ultralytics+sahi
+    weights: null
+  - id: fake-mmrotate
+    task: oriented_detection
+    backend: fake
+    framework: mmrotate
+    weights: null
+  - id: fake-mmseg
+    task: semantic_segmentation
+    backend: fake
+    framework: mmsegmentation
+    weights: null
+  - id: fake-mmdet-instance
+    task: instance_segmentation
+    backend: fake
+    framework: mmdetection
+    weights: null
+  - id: fake-opencd
+    task: change_detection
+    backend: fake
+    framework: open-cd
+    weights: null
+  - id: fake-sr
+    task: super_resolution
+    backend: fake
+    framework: basicsr/mmagic/swinir
+    weights: null
+
+weight_roots:
+  local: workspace/models
+  object_detection: workspace/models/ultralytics
+  oriented_detection: workspace/models/mmrotate
+  semantic_segmentation: workspace/models/mmsegmentation
+  instance_segmentation: workspace/models/mmdetection
+  change_detection: workspace/models/opencd
+  super_resolution: workspace/models/super_resolution
