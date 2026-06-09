@@ -1,0 +1,21 @@
+id: landcover
+name: Land Cover
+classes:
+  0:
+    name: background
+    color: "#000000"
+  1:
+    name: vegetation
+    color: "#2ca02c"
+  2:
+    name: water
+    color: "#1f77b4"
+  3:
+    name: building
+    color: "#d62728"
+  4:
+    name: bare_soil
+    color: "#8c564b"
+  5:
+    name: road
+    color: "#7f7f7f"

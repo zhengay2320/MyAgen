@@ -1,0 +1,55 @@
+defaults:
+  tile_size: 512
+  overlap: 64
+  output_root: workspace/outputs
+
+tasks:
+  object_detection:
+    model_id: fake-yolo-sahi
+    class_map: vehicle_ship_aircraft
+    outputs: [json, geojson, gpkg, manifest]
+    parameters:
+      score_threshold: 0.25
+      nms_threshold: 0.5
+  oriented_detection:
+    model_id: fake-mmrotate
+    class_map: vehicle_ship_aircraft
+    outputs: [json, geojson, gpkg, manifest]
+    parameters:
+      score_threshold: 0.25
+  semantic_segmentation:
+    model_id: fake-mmseg
+    class_map: landcover
+    outputs: [mask_geotiff, probability_npy, manifest]
+  instance_segmentation:
+    model_id: fake-mmdet-instance
+    class_map: vehicle_ship_aircraft
+    outputs: [json, geojson, gpkg, manifest]
+    parameters:
+      score_threshold: 0.25
+      nms_threshold: 0.5
+  change_detection:
+    model_id: fake-opencd
+    class_map: building_change
+    outputs: [mask_geotiff, probability_npy, manifest]
+    parameters:
+      threshold: 0.5
+  super_resolution:
+    model_id: fake-sr
+    outputs: [super_resolved_geotiff, manifest]
+    parameters:
+      scale: 2
+  spectral_indices:
+    model_id: spectral-index-calculator
+    outputs: [index_geotiff, manifest]
+    parameters:
+      indices: [ndvi, ndwi, ndbi, evi]
+  statistics:
+    model_id: statistics
+    outputs: [stats_json, manifest]
+  quality_check:
+    model_id: quality-checker
+    outputs: [quality_json, manifest]
+  report:
+    model_id: markdown-report-generator
+    outputs: [report_md, manifest]

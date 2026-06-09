@@ -1,0 +1,18 @@
+id: vehicle_ship_aircraft
+name: Vehicle, Ship, And Aircraft
+classes:
+  0:
+    name: vehicle
+    color: "#ff7f0e"
+  1:
+    name: ship
+    color: "#1f77b4"
+  2:
+    name: aircraft
+    color: "#9467bd"
+  3:
+    name: storage_tank
+    color: "#17becf"
+  4:
+    name: harbor_facility
+    color: "#8c564b"

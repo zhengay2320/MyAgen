@@ -1,0 +1,15 @@
+id: building_change
+name: Building Change
+classes:
+  0:
+    name: unchanged
+    color: "#2ca02c"
+  1:
+    name: changed
+    color: "#d62728"
+  2:
+    name: new_building
+    color: "#ff7f0e"
+  3:
+    name: demolished_building
+    color: "#1f77b4"

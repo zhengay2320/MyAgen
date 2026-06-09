@@ -1,0 +1,23 @@
+quality_rules:
+  require_crs: true
+  require_transform: true
+  max_empty_result_warning: true
+  min_detection_score: 0.25
+  min_valid_pixel_fraction: 0.95
+  probability_range:
+    min: 0.0
+    max: 1.0
+  change_detection:
+    warn_changed_fraction_gt: 0.75
+    warn_changed_fraction_lt: 0.001
+  super_resolution:
+    allowed_scales: [2, 3, 4]
+  vector:
+    require_valid_geometry: true
+    require_non_empty_geometry: true
+
+report_rules:
+  include_inputs: true
+  include_outputs: true
+  include_statistics: true
+  include_quality_flags: true
