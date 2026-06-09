@@ -47,21 +47,32 @@ def build_manifest(
     stats: dict[str, Any] | None = None,
     quality_flags: list[dict[str, Any]] | None = None,
     model: dict[str, Any] | None = None,
-    status: str = "completed",
+    status: str = "success",
+    metrics: dict[str, Any] | None = None,
+    conclusion: str | None = None,
+    errors: list[str] | None = None,
 ) -> dict[str, Any]:
     out_dir = Path(output_dir)
+    model_payload = model or {"id": "fake", "backend": "fake"}
+    statistics = stats or {}
     manifest = {
         "schema_version": "0.1",
         "job_id": out_dir.name,
         "task": task,
         "status": status,
+        "model_id": model_payload.get("id", "unknown"),
+        "input_files": _collect_input_files(inputs),
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "inputs": inputs,
-        "outputs": outputs,
         "parameters": parameters,
-        "model": model or {"id": "fake", "backend": "fake"},
-        "stats": stats or {},
+        "outputs": outputs,
+        "statistics": statistics,
+        "metrics": metrics or {},
         "quality_flags": quality_flags or [],
+        "conclusion": conclusion or _default_conclusion(task, status, quality_flags or []),
+        "errors": errors or [],
+        "inputs": inputs,
+        "model": model_payload,
+        "stats": statistics,
     }
     manifest["manifest_path"] = str(out_dir / "manifest.json")
     return manifest
@@ -71,3 +82,29 @@ def write_manifest(**kwargs: Any) -> dict[str, Any]:
     manifest = build_manifest(**kwargs)
     write_json(manifest["manifest_path"], manifest)
     return manifest
+
+
+def _collect_input_files(inputs: dict[str, Any]) -> list[str]:
+    files: list[str] = []
+    for key, value in inputs.items():
+        if key.endswith("raster") and isinstance(value, dict):
+            continue
+        if value is None:
+            continue
+        if isinstance(value, str):
+            files.append(value)
+        elif isinstance(value, list):
+            files.extend(str(item) for item in value)
+    return files
+
+
+def _default_conclusion(task: str, status: str, quality_flags: list[dict[str, Any]]) -> str:
+    if status == "failed":
+        return f"{task} failed."
+    error_count = sum(1 for item in quality_flags if item.get("severity") == "error")
+    warning_count = sum(1 for item in quality_flags if item.get("severity") == "warning")
+    if error_count:
+        return f"{task} completed with {error_count} error quality flag(s)."
+    if warning_count:
+        return f"{task} completed with {warning_count} warning quality flag(s)."
+    return f"{task} completed successfully."

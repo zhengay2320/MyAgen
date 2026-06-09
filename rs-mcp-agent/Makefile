@@ -1,9 +1,18 @@
 PYTHON ?= python
 
-.PHONY: test smoke synthetic api mcp clean
+.PHONY: install test unittest lint-basic smoke synthetic api mcp clean
+
+install:
+	$(PYTHON) -m pip install -e ".[dev]"
 
 test:
+	$(PYTHON) -m pytest -q
+
+unittest:
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"
+
+lint-basic:
+	$(PYTHON) -m compileall rs_service rs_mcp
 
 smoke:
 	$(PYTHON) scripts/smoke_test.py

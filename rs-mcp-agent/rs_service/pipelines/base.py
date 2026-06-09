@@ -10,7 +10,12 @@ def prepare_output_dir(output_dir: str | Path | None, workspace: str | Path = "w
     if output_dir is not None:
         out = Path(output_dir)
     else:
-        out = Path(workspace) / new_job_id(task)
+        try:
+            from rs_service.settings import get_settings
+
+            out = get_settings().outputs_dir / new_job_id(task)
+        except Exception:
+            out = Path(workspace) / "outputs" / new_job_id(task)
     out.mkdir(parents=True, exist_ok=True)
     return out
 

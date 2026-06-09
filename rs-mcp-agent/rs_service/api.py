@@ -31,6 +31,12 @@ def _handle(func, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(exc))
 
 
+def _payload_dict(payload: Any) -> dict[str, Any]:
+    if hasattr(payload, "model_dump"):
+        return payload.model_dump()
+    return payload.dict()
+
+
 def create_app() -> Any:
     if FastAPI is None:  # pragma: no cover
         raise RuntimeError("FastAPI is not installed. Run: pip install -e .")
@@ -62,49 +68,49 @@ def create_app() -> Any:
 
     @app.post("/run/object-detection")
     def object_detection(payload: TiledRunRequest) -> dict[str, Any]:
-        return _handle(services.run_object_detection, **payload.model_dump())
+        return _handle(services.run_object_detection, **_payload_dict(payload))
 
     @app.post("/run/oriented-detection")
     def oriented_detection(payload: TiledRunRequest) -> dict[str, Any]:
-        return _handle(services.run_oriented_detection, **payload.model_dump())
+        return _handle(services.run_oriented_detection, **_payload_dict(payload))
 
     @app.post("/run/semantic-segmentation")
     def semantic_segmentation(payload: TiledRunRequest) -> dict[str, Any]:
-        data = payload.model_dump()
+        data = _payload_dict(payload)
         data.pop("score_threshold", None)
         return _handle(services.run_semantic_segmentation, **data)
 
     @app.post("/run/instance-segmentation")
     def instance_segmentation(payload: TiledRunRequest) -> dict[str, Any]:
-        return _handle(services.run_instance_segmentation, **payload.model_dump())
+        return _handle(services.run_instance_segmentation, **_payload_dict(payload))
 
     @app.post("/run/change-detection")
     def change_detection(payload: ChangeDetectionRequest) -> dict[str, Any]:
-        return _handle(services.run_change_detection, **payload.model_dump())
+        return _handle(services.run_change_detection, **_payload_dict(payload))
 
     @app.post("/run/super-resolution")
     def super_resolution(payload: SuperResolutionRequest) -> dict[str, Any]:
-        return _handle(services.run_super_resolution, **payload.model_dump())
+        return _handle(services.run_super_resolution, **_payload_dict(payload))
 
     @app.post("/run/spectral-indices")
     def spectral_indices(payload: SpectralIndicesRequest) -> dict[str, Any]:
-        return _handle(services.run_spectral_indices, **payload.model_dump())
+        return _handle(services.run_spectral_indices, **_payload_dict(payload))
 
     @app.post("/statistics")
     def statistics(payload: StatisticsRequest) -> dict[str, Any]:
-        return _handle(services.calculate_statistics, **payload.model_dump())
+        return _handle(services.calculate_statistics, **_payload_dict(payload))
 
     @app.post("/quality")
     def quality(payload: QualityRequest) -> dict[str, Any]:
-        return _handle(services.quality_check_result, **payload.model_dump())
+        return _handle(services.quality_check_result, **_payload_dict(payload))
 
     @app.post("/report")
     def report(payload: ReportRequest) -> dict[str, Any]:
-        return _handle(services.generate_report, **payload.model_dump())
+        return _handle(services.generate_report, **_payload_dict(payload))
 
     @app.post("/manifest")
     def manifest(payload: ManifestRequest) -> dict[str, Any]:
-        return _handle(services.get_result_manifest, **payload.model_dump())
+        return _handle(services.get_result_manifest, **_payload_dict(payload))
 
     return app
 
