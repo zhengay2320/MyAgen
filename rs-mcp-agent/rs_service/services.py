@@ -5,7 +5,7 @@ from typing import Any
 
 from rs_service.core.manifest import read_json
 from rs_service.core.raster import inspect_raster as inspect_raster_core
-from rs_service.core.tiling import iter_windows
+from rs_service.core.tiling import preflight_plan as build_tiling_preflight_plan
 from rs_service.job_store import job_store
 from rs_service.pipelines.change_detection import run_change_detection as pipeline_change_detection
 from rs_service.pipelines.detection import (
@@ -19,27 +19,44 @@ from rs_service.pipelines.segmentation import run_semantic_segmentation as pipel
 from rs_service.pipelines.spectral_indices import run_spectral_indices as pipeline_spectral_indices
 from rs_service.pipelines.statistics import calculate_statistics as pipeline_statistics
 from rs_service.pipelines.super_resolution import run_super_resolution as pipeline_super_resolution
-from rs_service.registry import list_models as registry_list_models
+from rs_service.registry import TASK_MODEL_IDS, list_models as registry_list_models
+
+
+def _resolve_model_id(task: str, model_id: str | None) -> str | None:
+    return model_id or TASK_MODEL_IDS.get(task)
 
 
 def inspect_raster(path: str) -> dict[str, Any]:
     return inspect_raster_core(path)
 
 
-def preflight_plan(path: str, tile_size: int = 512, overlap: int = 64) -> dict[str, Any]:
+def preflight_plan(path: str, tile_size: int | None = None, overlap: int | None = None, task: str = "detection") -> dict[str, Any]:
     info = inspect_raster_core(path)
-    windows = list(iter_windows(info["width"], info["height"], tile_size=tile_size, overlap=overlap))
+    plan = build_tiling_preflight_plan(
+        width=info["width"],
+        height=info["height"],
+        task=task,
+        tile_size=tile_size,
+        overlap=overlap,
+    )
     return {
         "input": path,
         "raster": info,
-        "tile_size": tile_size,
-        "overlap": overlap,
-        "tile_count": len(windows),
+        "task": task,
+        "tile_size": plan["tile_size"],
+        "overlap": plan["overlap"],
+        "tile_count": plan["tile_count"],
+        "tiles": plan["tiles"],
         "windows": [
-            {"x0": x0, "y0": y0, "x1": x1, "y1": y1}
-            for x0, y0, x1, y1 in windows[:20]
+            {
+                "x0": tile["x_off"],
+                "y0": tile["y_off"],
+                "x1": tile["x_off"] + tile["width"],
+                "y1": tile["y_off"] + tile["height"],
+            }
+            for tile in plan["tiles"][:20]
         ],
-        "windows_truncated": len(windows) > 20,
+        "windows_truncated": len(plan["tiles"]) > 20,
         "outputs": {
             "raster": ["GeoTIFF"],
             "vector": ["GeoJSON", "GPKG"],
@@ -59,12 +76,15 @@ def run_object_detection(
     overlap: int = 64,
     model_id: str | None = None,
     score_threshold: float = 0.0,
+    nms_threshold: float = 0.5,
 ) -> dict[str, Any]:
+    resolved_model_id = _resolve_model_id("object_detection", model_id)
     parameters = {
         "tile_size": tile_size,
         "overlap": overlap,
-        "model_id": model_id,
+        "model_id": resolved_model_id,
         "score_threshold": score_threshold,
+        "nms_threshold": nms_threshold,
         "requested_output_dir": output_dir,
     }
     return job_store.submit_sync(
@@ -74,10 +94,11 @@ def run_object_detection(
             output_dir=job_output_dir,
             tile_size=tile_size,
             overlap=overlap,
-            model_id=model_id,
+            model_id=resolved_model_id,
             score_threshold=score_threshold,
+            nms_threshold=nms_threshold,
         ),
-        model_id=model_id,
+        model_id=resolved_model_id,
         input_files=[image_path],
         parameters=parameters,
     )
@@ -91,10 +112,11 @@ def run_oriented_detection(
     model_id: str | None = None,
     score_threshold: float = 0.0,
 ) -> dict[str, Any]:
+    resolved_model_id = _resolve_model_id("oriented_detection", model_id)
     parameters = {
         "tile_size": tile_size,
         "overlap": overlap,
-        "model_id": model_id,
+        "model_id": resolved_model_id,
         "score_threshold": score_threshold,
         "requested_output_dir": output_dir,
     }
@@ -105,10 +127,10 @@ def run_oriented_detection(
             output_dir=job_output_dir,
             tile_size=tile_size,
             overlap=overlap,
-            model_id=model_id,
+            model_id=resolved_model_id,
             score_threshold=score_threshold,
         ),
-        model_id=model_id,
+        model_id=resolved_model_id,
         input_files=[image_path],
         parameters=parameters,
     )
@@ -121,10 +143,11 @@ def run_semantic_segmentation(
     overlap: int = 64,
     model_id: str | None = None,
 ) -> dict[str, Any]:
+    resolved_model_id = _resolve_model_id("semantic_segmentation", model_id)
     parameters = {
         "tile_size": tile_size,
         "overlap": overlap,
-        "model_id": model_id,
+        "model_id": resolved_model_id,
         "requested_output_dir": output_dir,
     }
     return job_store.submit_sync(
@@ -134,9 +157,9 @@ def run_semantic_segmentation(
             output_dir=job_output_dir,
             tile_size=tile_size,
             overlap=overlap,
-            model_id=model_id,
+            model_id=resolved_model_id,
         ),
-        model_id=model_id,
+        model_id=resolved_model_id,
         input_files=[image_path],
         parameters=parameters,
     )
@@ -149,12 +172,15 @@ def run_instance_segmentation(
     overlap: int = 64,
     model_id: str | None = None,
     score_threshold: float = 0.0,
+    nms_threshold: float = 0.5,
 ) -> dict[str, Any]:
+    resolved_model_id = _resolve_model_id("instance_segmentation", model_id)
     parameters = {
         "tile_size": tile_size,
         "overlap": overlap,
-        "model_id": model_id,
+        "model_id": resolved_model_id,
         "score_threshold": score_threshold,
+        "nms_threshold": nms_threshold,
         "requested_output_dir": output_dir,
     }
     return job_store.submit_sync(
@@ -164,10 +190,11 @@ def run_instance_segmentation(
             output_dir=job_output_dir,
             tile_size=tile_size,
             overlap=overlap,
-            model_id=model_id,
+            model_id=resolved_model_id,
             score_threshold=score_threshold,
+            nms_threshold=nms_threshold,
         ),
-        model_id=model_id,
+        model_id=resolved_model_id,
         input_files=[image_path],
         parameters=parameters,
     )
@@ -182,10 +209,11 @@ def run_change_detection(
     model_id: str | None = None,
     threshold: float = 0.5,
 ) -> dict[str, Any]:
+    resolved_model_id = _resolve_model_id("change_detection", model_id)
     parameters = {
         "tile_size": tile_size,
         "overlap": overlap,
-        "model_id": model_id,
+        "model_id": resolved_model_id,
         "threshold": threshold,
         "requested_output_dir": output_dir,
     }
@@ -197,10 +225,10 @@ def run_change_detection(
             output_dir=job_output_dir,
             tile_size=tile_size,
             overlap=overlap,
-            model_id=model_id,
+            model_id=resolved_model_id,
             threshold=threshold,
         ),
-        model_id=model_id,
+        model_id=resolved_model_id,
         input_files=[before_path, after_path],
         parameters=parameters,
     )
@@ -214,11 +242,12 @@ def run_super_resolution(
     scale: int = 2,
     model_id: str | None = None,
 ) -> dict[str, Any]:
+    resolved_model_id = _resolve_model_id("super_resolution", model_id)
     parameters = {
         "tile_size": tile_size,
         "overlap": overlap,
         "scale": scale,
-        "model_id": model_id,
+        "model_id": resolved_model_id,
         "requested_output_dir": output_dir,
     }
     return job_store.submit_sync(
@@ -229,9 +258,9 @@ def run_super_resolution(
             tile_size=tile_size,
             overlap=overlap,
             scale=scale,
-            model_id=model_id,
+            model_id=resolved_model_id,
         ),
-        model_id=model_id,
+        model_id=resolved_model_id,
         input_files=[image_path],
         parameters=parameters,
     )

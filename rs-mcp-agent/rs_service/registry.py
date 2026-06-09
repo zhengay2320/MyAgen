@@ -14,12 +14,12 @@ from rs_service.adapters.placeholders import framework_statuses
 
 
 TASK_MODEL_IDS = {
-    "object_detection": "fake-yolo-sahi",
-    "oriented_detection": "fake-mmrotate",
-    "semantic_segmentation": "fake-mmseg",
-    "instance_segmentation": "fake-mmdet-instance",
-    "change_detection": "fake-opencd",
-    "super_resolution": "fake-sr",
+    "object_detection": "fake_detection",
+    "oriented_detection": "fake_oriented_detection",
+    "semantic_segmentation": "fake_segmentation",
+    "instance_segmentation": "fake_instance",
+    "change_detection": "fake_change",
+    "super_resolution": "fake_super_resolution",
 }
 
 
@@ -42,16 +42,16 @@ def list_models() -> dict[str, Any]:
 
 def get_adapter(task: str, model_id: str | None = None, **kwargs: Any) -> Any:
     selected = model_id or TASK_MODEL_IDS.get(task)
-    if task == "object_detection" and selected == "fake-yolo-sahi":
+    if task == "object_detection" and selected in {"fake_detection", "fake-yolo-sahi"}:
         return FakeDetectionAdapter()
-    if task == "oriented_detection" and selected == "fake-mmrotate":
+    if task == "oriented_detection" and selected in {"fake_oriented_detection", "fake-mmrotate"}:
         return FakeOrientedDetectionAdapter()
-    if task == "semantic_segmentation" and selected == "fake-mmseg":
+    if task == "semantic_segmentation" and selected in {"fake_segmentation", "fake-mmseg"}:
         return FakeSemanticSegmentationAdapter()
-    if task == "instance_segmentation" and selected == "fake-mmdet-instance":
+    if task == "instance_segmentation" and selected in {"fake_instance", "fake-mmdet-instance"}:
         return FakeInstanceSegmentationAdapter()
-    if task == "change_detection" and selected == "fake-opencd":
+    if task == "change_detection" and selected in {"fake_change", "fake-opencd"}:
         return FakeChangeDetectionAdapter()
-    if task == "super_resolution" and selected == "fake-sr":
+    if task == "super_resolution" and selected in {"fake_super_resolution", "fake-sr"}:
         return FakeSuperResolutionAdapter(scale=int(kwargs.get("scale", 2)))
     raise ValueError(f"No adapter registered for task={task!r}, model_id={selected!r}")

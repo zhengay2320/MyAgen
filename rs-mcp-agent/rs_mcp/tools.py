@@ -9,8 +9,8 @@ def inspect_raster(path: str) -> dict[str, Any]:
     return services.inspect_raster(path)
 
 
-def preflight_plan(path: str, tile_size: int = 512, overlap: int = 64) -> dict[str, Any]:
-    return services.preflight_plan(path, tile_size=tile_size, overlap=overlap)
+def preflight_plan(path: str, tile_size: int | None = None, overlap: int | None = None, task: str = "detection") -> dict[str, Any]:
+    return services.preflight_plan(path, tile_size=tile_size, overlap=overlap, task=task)
 
 
 def list_models() -> dict[str, Any]:
@@ -24,8 +24,9 @@ def run_object_detection(
     overlap: int = 64,
     model_id: str | None = None,
     score_threshold: float = 0.0,
+    nms_threshold: float = 0.5,
 ) -> dict[str, Any]:
-    return services.run_object_detection(image_path, output_dir, tile_size, overlap, model_id, score_threshold)
+    return services.run_object_detection(image_path, output_dir, tile_size, overlap, model_id, score_threshold, nms_threshold)
 
 
 def run_oriented_detection(
@@ -56,8 +57,9 @@ def run_instance_segmentation(
     overlap: int = 64,
     model_id: str | None = None,
     score_threshold: float = 0.0,
+    nms_threshold: float = 0.5,
 ) -> dict[str, Any]:
-    return services.run_instance_segmentation(image_path, output_dir, tile_size, overlap, model_id, score_threshold)
+    return services.run_instance_segmentation(image_path, output_dir, tile_size, overlap, model_id, score_threshold, nms_threshold)
 
 
 def run_change_detection(
@@ -162,12 +164,12 @@ def tool_definitions() -> list[dict[str, Any]]:
     object_schema = {"type": "object"}
     return [
         {"name": "inspect_raster", "description": "Inspect raster metadata, CRS, transform, bounds, and pixel size.", "inputSchema": _schema({"path": string}, ["path"])},
-        {"name": "preflight_plan", "description": "Plan tiled processing for a raster before running inference.", "inputSchema": _schema({"path": string, "tile_size": integer, "overlap": integer}, ["path"])},
+        {"name": "preflight_plan", "description": "Plan tiled processing for a raster before running inference.", "inputSchema": _schema({"path": string, "task": string, "tile_size": integer, "overlap": integer}, ["path"])},
         {"name": "list_models", "description": "List fake stage-1 models and installed framework status.", "inputSchema": _schema({})},
-        {"name": "run_object_detection", "description": "Run tiled object detection and export JSON, GeoJSON, GPKG, and manifest.", "inputSchema": _schema({"image_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "model_id": string, "score_threshold": number}, ["image_path"])},
+        {"name": "run_object_detection", "description": "Run tiled object detection and export JSON, GeoJSON, GPKG, and manifest.", "inputSchema": _schema({"image_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "model_id": string, "score_threshold": number, "nms_threshold": number}, ["image_path"])},
         {"name": "run_oriented_detection", "description": "Run tiled rotated-box detection and export geospatial vectors.", "inputSchema": _schema({"image_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "model_id": string, "score_threshold": number}, ["image_path"])},
         {"name": "run_semantic_segmentation", "description": "Run tiled semantic segmentation with probability stitching and mask GeoTIFF output.", "inputSchema": _schema({"image_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "model_id": string}, ["image_path"])},
-        {"name": "run_instance_segmentation", "description": "Run tiled instance segmentation and export geospatial polygons.", "inputSchema": _schema({"image_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "model_id": string, "score_threshold": number}, ["image_path"])},
+        {"name": "run_instance_segmentation", "description": "Run tiled instance segmentation and export geospatial polygons.", "inputSchema": _schema({"image_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "model_id": string, "score_threshold": number, "nms_threshold": number}, ["image_path"])},
         {"name": "run_change_detection", "description": "Run tiled bi-temporal change detection with probability stitching.", "inputSchema": _schema({"before_path": string, "after_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "model_id": string, "threshold": number}, ["before_path", "after_path"])},
         {"name": "run_super_resolution", "description": "Run tiled super resolution and update output GeoTIFF transform.", "inputSchema": _schema({"image_path": string, "output_dir": string, "tile_size": integer, "overlap": integer, "scale": integer, "model_id": string}, ["image_path"])},
         {"name": "run_spectral_indices", "description": "Calculate common spectral indices such as NDVI, NDWI, NDBI, and EVI.", "inputSchema": _schema({"image_path": string, "output_dir": string, "indices": array_string, "band_mapping": object_schema, "tile_size": integer, "overlap": integer}, ["image_path"])},

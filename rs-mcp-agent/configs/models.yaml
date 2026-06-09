@@ -1,4 +1,34 @@
 models:
+  - id: fake_detection
+    task: object_detection
+    backend: fake
+    framework: numpy
+    weights: null
+  - id: fake_oriented_detection
+    task: oriented_detection
+    backend: fake
+    framework: numpy
+    weights: null
+  - id: fake_segmentation
+    task: semantic_segmentation
+    backend: fake
+    framework: numpy
+    weights: null
+  - id: fake_instance
+    task: instance_segmentation
+    backend: fake
+    framework: numpy
+    weights: null
+  - id: fake_change
+    task: change_detection
+    backend: fake
+    framework: numpy
+    weights: null
+  - id: fake_super_resolution
+    task: super_resolution
+    backend: fake
+    framework: numpy
+    weights: null
   - id: fake-yolo-sahi
     task: object_detection
     backend: fake

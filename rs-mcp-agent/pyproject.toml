@@ -69,7 +69,7 @@ dev = [
 ]
 
 [project.scripts]
-rs-service = "rs_service.api:main"
+rs-service = "rs_service.cli:app"
 rs-mcp = "rs_mcp.server:main"
 
 [tool.setuptools.packages.find]

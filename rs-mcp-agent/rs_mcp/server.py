@@ -22,8 +22,8 @@ def build_fastmcp_server() -> Any:
         return TOOL_FUNCTIONS["inspect_raster"](path=path)
 
     @mcp.tool()
-    def preflight_plan(path: str, tile_size: int = 512, overlap: int = 64) -> dict[str, Any]:
-        return TOOL_FUNCTIONS["preflight_plan"](path=path, tile_size=tile_size, overlap=overlap)
+    def preflight_plan(path: str, tile_size: int | None = None, overlap: int | None = None, task: str = "detection") -> dict[str, Any]:
+        return TOOL_FUNCTIONS["preflight_plan"](path=path, tile_size=tile_size, overlap=overlap, task=task)
 
     @mcp.tool()
     def list_models() -> dict[str, Any]:
@@ -37,6 +37,7 @@ def build_fastmcp_server() -> Any:
         overlap: int = 64,
         model_id: str | None = None,
         score_threshold: float = 0.0,
+        nms_threshold: float = 0.5,
     ) -> dict[str, Any]:
         return TOOL_FUNCTIONS["run_object_detection"](
             image_path=image_path,
@@ -45,6 +46,7 @@ def build_fastmcp_server() -> Any:
             overlap=overlap,
             model_id=model_id,
             score_threshold=score_threshold,
+            nms_threshold=nms_threshold,
         )
 
     @mcp.tool()
@@ -89,6 +91,7 @@ def build_fastmcp_server() -> Any:
         overlap: int = 64,
         model_id: str | None = None,
         score_threshold: float = 0.0,
+        nms_threshold: float = 0.5,
     ) -> dict[str, Any]:
         return TOOL_FUNCTIONS["run_instance_segmentation"](
             image_path=image_path,
@@ -97,6 +100,7 @@ def build_fastmcp_server() -> Any:
             overlap=overlap,
             model_id=model_id,
             score_threshold=score_threshold,
+            nms_threshold=nms_threshold,
         )
 
     @mcp.tool()
