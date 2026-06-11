@@ -3,7 +3,18 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from rs_service.core.manifest import read_json
+from rs_service.analysis.conclusion_engine import build_conclusion
+from rs_service.analysis.quality_checks import run_quality_checks
+from rs_service.analysis.report_builder import build_report_markdown
+from rs_service.analysis.statistics import (
+    change_statistics,
+    detection_statistics,
+    instance_statistics,
+    segmentation_statistics,
+    spectral_index_statistics,
+    super_resolution_statistics,
+)
+from rs_service.core.manifest import read_json, write_json
 from rs_service.core.raster import inspect_raster as inspect_raster_core
 from rs_service.core.tiling import preflight_plan as build_tiling_preflight_plan
 from rs_service.job_store import job_store
@@ -208,6 +219,7 @@ def run_change_detection(
     overlap: int = 64,
     model_id: str | None = None,
     threshold: float = 0.5,
+    auto_align: bool = False,
 ) -> dict[str, Any]:
     resolved_model_id = _resolve_model_id("change_detection", model_id)
     parameters = {
@@ -215,6 +227,7 @@ def run_change_detection(
         "overlap": overlap,
         "model_id": resolved_model_id,
         "threshold": threshold,
+        "auto_align": auto_align,
         "requested_output_dir": output_dir,
     }
     return job_store.submit_sync(
@@ -227,6 +240,7 @@ def run_change_detection(
             overlap=overlap,
             model_id=resolved_model_id,
             threshold=threshold,
+            auto_align=auto_align,
         ),
         model_id=resolved_model_id,
         input_files=[before_path, after_path],
@@ -241,6 +255,7 @@ def run_super_resolution(
     overlap: int = 64,
     scale: int = 2,
     model_id: str | None = None,
+    reference_path: str | None = None,
 ) -> dict[str, Any]:
     resolved_model_id = _resolve_model_id("super_resolution", model_id)
     parameters = {
@@ -248,6 +263,7 @@ def run_super_resolution(
         "overlap": overlap,
         "scale": scale,
         "model_id": resolved_model_id,
+        "reference_path": reference_path,
         "requested_output_dir": output_dir,
     }
     return job_store.submit_sync(
@@ -259,9 +275,10 @@ def run_super_resolution(
             overlap=overlap,
             scale=scale,
             model_id=resolved_model_id,
+            reference_path=reference_path,
         ),
         model_id=resolved_model_id,
-        input_files=[image_path],
+        input_files=[path for path in [image_path, reference_path] if path],
         parameters=parameters,
     )
 
@@ -371,3 +388,114 @@ def get_result_manifest(job_id: str | None = None, manifest_path: str | None = N
     if not Path(path).exists():
         raise FileNotFoundError(f"No manifest found for job_id={job_id!r}")
     return read_json(path)
+
+
+def analyze_job(job_id: str, output_dir: str | None = None, zones_path: str | None = None) -> dict[str, Any]:
+    """Analyze a completed job and update its original manifest."""
+    manifest = get_result_manifest(job_id=job_id)
+    manifest_path = Path(manifest["manifest_path"])
+    out_dir = Path(output_dir) if output_dir else manifest_path.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    statistics = _statistics_for_manifest(manifest)
+    quality_flags = run_quality_checks(manifest, statistics)
+    conclusion = build_conclusion(manifest, statistics, quality_flags)
+    stats_path = write_json(out_dir / "stats.json", statistics)
+    quality_path = write_json(out_dir / "quality.json", {"quality_flags": quality_flags})
+    manifest["statistics"] = statistics
+    manifest["stats"] = statistics
+    manifest["quality_flags"] = quality_flags
+    manifest["conclusion"] = conclusion
+    manifest.setdefault("outputs", {})
+    manifest["outputs"]["stats_json"] = stats_path
+    manifest["outputs"]["quality_json"] = quality_path
+    write_json(manifest_path, manifest)
+    _update_job_record_from_manifest(manifest)
+    return manifest
+
+
+def generate_job_report(job_id: str, output_dir: str | None = None, title: str = "Remote Sensing Processing Report") -> dict[str, Any]:
+    """Generate a Chinese markdown report and update the source manifest."""
+    manifest = get_result_manifest(job_id=job_id)
+    if not isinstance(manifest.get("conclusion"), dict) or not manifest.get("statistics"):
+        manifest = analyze_job(job_id)
+    manifest_path = Path(manifest["manifest_path"])
+    out_dir = Path(output_dir) if output_dir else manifest_path.parent
+    report_path = out_dir / "report.md"
+    report = build_report_markdown(manifest, report_path)
+    manifest["outputs"]["report"] = report
+    manifest["outputs"]["report_md"] = report
+    write_json(manifest_path, manifest)
+    _update_job_record_from_manifest(manifest)
+    return manifest
+
+
+def _statistics_for_manifest(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Route a manifest to the matching analysis function."""
+    task = manifest.get("task")
+    outputs = manifest.get("outputs", {})
+    pixel_area = _pixel_area_from_manifest(manifest)
+    if task == "semantic_segmentation":
+        return segmentation_statistics(_required_output(outputs, "mask_geotiff"), "configs/class_maps/landcover.yaml", pixel_area)
+    if task in {"object_detection", "oriented_detection"}:
+        return detection_statistics(_required_output(outputs, "geojson"))
+    if task == "instance_segmentation":
+        return instance_statistics(_required_output(outputs, "geojson"))
+    if task == "change_detection":
+        return change_statistics(_required_output(outputs, "mask_geotiff"), pixel_area)
+    if task == "super_resolution":
+        input_path = _first_input_file(manifest)
+        return super_resolution_statistics(input_path, _required_output(outputs, "super_resolved_geotiff"), int(manifest.get("parameters", {}).get("scale", 2)))
+    if task == "spectral_indices":
+        index_outputs = [value for key, value in outputs.items() if key.endswith("_geotiff")]
+        if not index_outputs:
+            raise FileNotFoundError("No spectral index GeoTIFF output found in manifest.")
+        stats_by_index = {Path(path).stem: spectral_index_statistics(path) for path in index_outputs}
+        return {"type": "spectral_indices", "indices": stats_by_index}
+    if task == "statistics":
+        return manifest.get("statistics", manifest.get("stats", {}))
+    raise ValueError(f"Unsupported analysis task: {task}")
+
+
+def _required_output(outputs: dict[str, Any], key: str) -> str:
+    """Return a required output path or raise a clear error."""
+    value = outputs.get(key)
+    if not value:
+        raise FileNotFoundError(f"Manifest is missing required output: {key}")
+    if not Path(str(value)).exists():
+        raise FileNotFoundError(f"Missing output file for {key}: {value}")
+    return str(value)
+
+
+def _first_input_file(manifest: dict[str, Any]) -> str:
+    """Return the first input file from a manifest."""
+    files = manifest.get("input_files") or []
+    if files:
+        return str(files[0])
+    inputs = manifest.get("inputs", {})
+    for value in inputs.values():
+        if isinstance(value, str):
+            return value
+    raise FileNotFoundError("Manifest has no input file path.")
+
+
+def _pixel_area_from_manifest(manifest: dict[str, Any]) -> float:
+    """Estimate pixel area from raster metadata in a manifest."""
+    for value in manifest.get("inputs", {}).values():
+        if isinstance(value, dict) and "transform" in value:
+            transform = value["transform"]
+            return abs(float(transform[0]) * float(transform[4]) - float(transform[1]) * float(transform[3]))
+    return 1.0
+
+
+def _update_job_record_from_manifest(manifest: dict[str, Any]) -> None:
+    """Best-effort sync from manifest analysis fields back to the local job store."""
+    try:
+        job_store.update_job(
+            manifest["job_id"],
+            manifest_path=manifest.get("manifest_path"),
+            outputs=manifest.get("outputs", {}),
+            statistics=manifest.get("statistics", {}),
+            quality_flags=manifest.get("quality_flags", []),
+        )
+    except Exception:
+        pass

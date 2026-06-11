@@ -20,6 +20,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--height", type=int, default=96)
     parser.add_argument("--bands", type=int, default=3)
     parser.add_argument("--changed", action="store_true", help="Inject a deterministic changed patch.")
+    parser.add_argument("--change-pair", action="store_true", help="Create matching t1/t2 GeoTIFFs for change detection.")
+    parser.add_argument("--after-output", default=None, help="Output path for t2 when --change-pair is used.")
     parser.add_argument("--crs", default=DEFAULT_CRS)
     return parser.parse_args()
 
@@ -66,6 +68,19 @@ def create_visual_synthetic_array(width: int, height: int, bands: int = 3, chang
 def main() -> None:
     """Create and write the synthetic raster."""
     args = parse_args()
+    if args.change_pair:
+        output = Path(args.output)
+        before_path = output.with_name(f"{output.stem}_t1{output.suffix}")
+        after_path = Path(args.after_output) if args.after_output else output.with_name(f"{output.stem}_t2{output.suffix}")
+        before = create_visual_synthetic_array(width=args.width, height=args.height, bands=args.bands, changed=False)
+        after = create_visual_synthetic_array(width=args.width, height=args.height, bands=args.bands, changed=True)
+        profile = profile_for_array(before, crs=args.crs, transform=DEFAULT_TRANSFORM)
+        before_info = write_geotiff(before_path, before, profile)
+        after_info = write_geotiff(after_path, after, profile)
+        print(f"wrote {before_info['path']}")
+        print(f"wrote {after_info['path']}")
+        print(f"pair_size={before_info['width']}x{before_info['height']} bands={before_info['count']} crs={before_info['crs']}")
+        return
     array = create_visual_synthetic_array(width=args.width, height=args.height, bands=args.bands, changed=args.changed)
     profile = profile_for_array(array, crs=args.crs, transform=DEFAULT_TRANSFORM)
     info = write_geotiff(Path(args.output), array, profile)

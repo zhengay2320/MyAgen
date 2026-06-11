@@ -45,6 +45,8 @@ openmmlab = [
   "mmengine>=0.10",
   "mmcv>=2.1",
   "mmdet>=3.3",
+  "mmsegmentation>=1.2",
+  "mmrotate>=1.0",
   "basicsr>=1.4",
   "mmagic>=1.2"
 ]
@@ -56,6 +58,8 @@ ml = [
   "mmengine>=0.10",
   "mmcv>=2.1",
   "mmdet>=3.3",
+  "mmsegmentation>=1.2",
+  "mmrotate>=1.0",
   "basicsr>=1.4",
   "mmagic>=1.2"
 ]

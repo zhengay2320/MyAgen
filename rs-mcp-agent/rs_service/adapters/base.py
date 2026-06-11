@@ -55,6 +55,7 @@ class SegmentationPrediction:
     mask: np.ndarray
     probabilities: np.ndarray | None = None
     class_names: dict[int, str] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

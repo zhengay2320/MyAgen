@@ -1,24 +1,41 @@
 # Cherry Studio MCP Configuration
 
-Add a new MCP server in Cherry Studio with stdio transport.
+Start the FastAPI service first:
+
+```bash
+python scripts/run_api.py --host 127.0.0.1 --port 8765
+```
+
+Add a Cherry Studio MCP server:
+
+- Type: `STDIO`
+- Command: `python`
+- Arguments: `-m rs_mcp.server`
+- Working directory: project root, for example `D:\program_myself\Myagent\rs-mcp-agent`
+- Environment variables:
+  - `RS_SERVICE_URL=http://127.0.0.1:8765`
+  - `RS_WORKSPACE=D:\program_myself\Myagent\rs-mcp-agent\workspace`
+
+JSON-style reference:
 
 ```json
 {
-  "name": "rs-mcp-agent",
+  "name": "rs_remote_sensing",
   "type": "stdio",
   "command": "python",
   "args": ["-m", "rs_mcp.server"],
-  "cwd": "D:\\program_myself\\Myagent\\rs-mcp-agent"
+  "cwd": "D:\\program_myself\\Myagent\\rs-mcp-agent",
+  "env": {
+    "RS_SERVICE_URL": "http://127.0.0.1:8765",
+    "RS_WORKSPACE": "D:\\program_myself\\Myagent\\rs-mcp-agent\\workspace"
+  }
 }
 ```
 
-Recommended first-stage workflow:
+Recommended workflow:
 
-1. Run `scripts/create_synthetic_geotiff.py` to create a test raster.
-2. Call `inspect_raster`.
-3. Call `preflight_plan` with `tile_size` and `overlap`.
-4. Run one of the tiled pipelines.
-5. Load the result with `get_result_manifest`.
-6. Call `calculate_statistics`, `quality_check_result`, and `generate_report`.
-
-Large model weights are intentionally not included. Use `scripts/download_weights.py --print-plan` to create and inspect the expected local checkpoint paths.
+1. Call `inspect_raster`.
+2. Call `preflight_plan`.
+3. Run the selected `run_*` tool with explicit `tile_size` and `overlap` for large images.
+4. Use `get_result_manifest`.
+5. Base conclusions on `statistics`, `metrics`, and `quality_flags`.

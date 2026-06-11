@@ -176,21 +176,14 @@ def create_app() -> Any:
     @app.post("/jobs/{job_id}/analyze")
     def analyze_job(job_id: str, payload: JobAnalyzeRequest | None = None) -> dict[str, Any]:
         data = _payload_dict(payload) if payload is not None else {}
-        source_manifest = services.get_result_manifest(job_id=job_id)
-        return _submit_job(
-            services.calculate_statistics,
-            manifest_path=source_manifest["manifest_path"],
-            output_dir=data.get("output_dir"),
-            zones_path=data.get("zones_path"),
-        )
+        return _submit_job(services.analyze_job, job_id=job_id, output_dir=data.get("output_dir"), zones_path=data.get("zones_path"))
 
     @app.post("/jobs/{job_id}/report")
     def report_job(job_id: str, payload: JobReportRequest | None = None) -> dict[str, Any]:
         data = _payload_dict(payload) if payload is not None else {}
-        source_manifest = services.get_result_manifest(job_id=job_id)
         return _submit_job(
-            services.generate_report,
-            manifest_path=source_manifest["manifest_path"],
+            services.generate_job_report,
+            job_id=job_id,
             output_dir=data.get("output_dir"),
             title=data.get("title", "Remote Sensing Processing Report"),
         )

@@ -35,11 +35,16 @@ def main() -> None:
     manifests.append(services.run_super_resolution(before, str(root / "super_resolution"), tile_size=48, overlap=12, scale=2))
     manifests.append(services.run_spectral_indices(before, str(root / "spectral_indices"), tile_size=48, overlap=12))
 
-    detection_geojson = manifests[0]["outputs"]["geojson"]
-    stats_manifest = services.calculate_statistics(input_path=detection_geojson, output_dir=str(root / "statistics"))
-    quality_manifest = services.quality_check_result(manifest_path=manifests[0]["manifest_path"], output_dir=str(root / "quality"))
-    report_manifest = services.generate_report(manifests[0]["manifest_path"], output_dir=str(root / "report"))
-    manifests.extend([stats_manifest, quality_manifest, report_manifest])
+    analyzed_manifests = []
+    for manifest in manifests:
+        analyzed = services.analyze_job(manifest["job_id"])
+        reported = services.generate_job_report(analyzed["job_id"])
+        if reported.get("status") != "success":
+            raise RuntimeError(f"Unexpected manifest status for {reported['job_id']}: {reported.get('status')}")
+        if "report" not in reported.get("outputs", {}):
+            raise RuntimeError(f"Missing report output for {reported['job_id']}")
+        analyzed_manifests.append(reported)
+    manifests = analyzed_manifests
 
     print(json.dumps({"ok": True, "manifest_paths": [item["manifest_path"] for item in manifests]}, indent=2))
 

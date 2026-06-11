@@ -34,31 +34,155 @@ models:
     backend: fake
     framework: ultralytics+sahi
     weights: null
+  - id: yolo_detection
+    task: object_detection
+    backend: ultralytics
+    framework: ultralytics
+    weights: weights/yolo_detection.pt
+    confidence_threshold: 0.25
+    iou_threshold: 0.45
+    device: cpu
+    imgsz: 1024
+  - id: sahi_yolo_detection
+    task: object_detection
+    backend: sahi
+    framework: sahi+ultralytics
+    weights: weights/yolo_detection.pt
+    confidence_threshold: 0.25
+    device: cpu
+    slice_height: 512
+    slice_width: 512
+    overlap_ratio: 0.2
   - id: fake-mmrotate
     task: oriented_detection
     backend: fake
     framework: mmrotate
     weights: null
+  - id: mmrotate_dota_oriented
+    task: oriented_detection
+    backend: mmrotate
+    framework: mmrotate
+    config: external/mmrotate/configs/oriented_rcnn/oriented-rcnn_dota.py
+    checkpoint: weights/mmrotate_dota_oriented.pth
+    device: cpu
+    angle_unit: auto
+    classes:
+      - plane
+      - ship
+      - storage-tank
+      - baseball-diamond
+      - tennis-court
   - id: fake-mmseg
     task: semantic_segmentation
     backend: fake
     framework: mmsegmentation
     weights: null
+  - id: mmseg_segformer_landcover
+    task: semantic_segmentation
+    backend: mmseg
+    framework: mmsegmentation
+    config: external/mmsegmentation/configs/segformer/segformer_landcover.py
+    checkpoint: weights/mmseg_segformer_landcover.pth
+    device: cpu
+    classes:
+      - background
+      - landcover
+    palette:
+      - [0, 0, 0]
+      - [60, 180, 75]
+  - id: mmseg_deeplab_building
+    task: semantic_segmentation
+    backend: mmseg
+    framework: mmsegmentation
+    config: external/mmsegmentation/configs/deeplabv3/deeplab_building.py
+    checkpoint: weights/mmseg_deeplab_building.pth
+    device: cpu
+    classes:
+      - background
+      - building
+    palette:
+      - [0, 0, 0]
+      - [230, 25, 75]
   - id: fake-mmdet-instance
     task: instance_segmentation
     backend: fake
     framework: mmdetection
     weights: null
+  - id: mmdet_maskrcnn_instance
+    task: instance_segmentation
+    backend: mmdet
+    framework: mmdetection
+    config: external/mmdetection/configs/mask_rcnn/mask-rcnn_remote_sensing.py
+    checkpoint: weights/mmdet_maskrcnn_instance.pth
+    device: cpu
+    classes:
+      - background
+      - target
+  - id: yolo_instance_segmentation
+    task: instance_segmentation
+    backend: ultralytics
+    framework: ultralytics
+    weights: weights/yolo_instance.pt
+    confidence_threshold: 0.25
+    iou_threshold: 0.45
+    device: cpu
+    imgsz: 1024
   - id: fake-opencd
     task: change_detection
     backend: fake
     framework: open-cd
     weights: null
+  - id: opencd_changer_building
+    task: change_detection
+    backend: opencd
+    framework: open-cd
+    config: external/opencd/configs/changer/changer_building.py
+    checkpoint: weights/opencd_changer_building.pth
+    device: cpu
+    threshold: 0.5
+  - id: opencd_changeformer_landcover
+    task: change_detection
+    backend: opencd
+    framework: open-cd
+    config: external/opencd/configs/changeformer/changeformer_landcover.py
+    checkpoint: weights/opencd_changeformer_landcover.pth
+    device: cpu
+    threshold: 0.5
   - id: fake-sr
     task: super_resolution
     backend: fake
     framework: basicsr/mmagic/swinir
     weights: null
+  - id: swinir_x2
+    task: super_resolution
+    backend: swinir
+    framework: swinir/torch
+    checkpoint: weights/swinir_x2.pth
+    scale: 2
+    device: cpu
+  - id: swinir_x4
+    task: super_resolution
+    backend: swinir
+    framework: swinir/torch
+    checkpoint: weights/swinir_x4.pth
+    scale: 4
+    device: cpu
+  - id: basicsr_x4
+    task: super_resolution
+    backend: basicsr
+    framework: basicsr
+    config: external/basicsr/options/sr_x4.yml
+    checkpoint: weights/basicsr_x4.pth
+    scale: 4
+    device: cpu
+  - id: mmagic_sr_stub
+    task: super_resolution
+    backend: mmagic
+    framework: mmagic
+    config: external/mmagic/configs/sr/sr_stub.py
+    checkpoint: weights/mmagic_sr_stub.pth
+    scale: 4
+    device: cpu
 
 weight_roots:
   local: workspace/models

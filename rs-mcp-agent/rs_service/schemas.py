@@ -107,10 +107,12 @@ class ChangeDetectionRequest(BaseModel):
     overlap: int = Field(default=64, ge=0)
     model_id: str | None = None
     threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+    auto_align: bool = False
 
 
 class SuperResolutionRequest(TiledTaskRequest):
     scale: int = Field(default=2, gt=0)
+    reference_path: str | None = None
 
 
 class SpectralIndexRequest(BaseModel):

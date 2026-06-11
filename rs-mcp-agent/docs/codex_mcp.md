@@ -1,33 +1,39 @@
 # Codex MCP Configuration
 
-Use the stdio MCP server from this project root.
+Start the FastAPI service first:
 
-```json
-{
-  "mcpServers": {
-    "rs-mcp-agent": {
-      "command": "python",
-      "args": ["-m", "rs_mcp.server"],
-      "cwd": "/absolute/path/to/rs-mcp-agent"
-    }
-  }
-}
+```bash
+python scripts/run_api.py --host 127.0.0.1 --port 8765
 ```
 
-On Windows, use an absolute `cwd` such as:
+Then configure Codex to start the stdio MCP server:
 
-```json
-{
-  "mcpServers": {
-    "rs-mcp-agent": {
-      "command": "python",
-      "args": ["-m", "rs_mcp.server"],
-      "cwd": "D:\\program_myself\\Myagent\\rs-mcp-agent"
-    }
-  }
-}
+```toml
+[mcp_servers.rs_remote_sensing]
+command = "python"
+args = ["-m", "rs_mcp.server"]
+cwd = "/ABSOLUTE/PATH/TO/rs-mcp-agent"
+startup_timeout_sec = 20
+tool_timeout_sec = 600
+
+[mcp_servers.rs_remote_sensing.env]
+RS_SERVICE_URL = "http://127.0.0.1:8765"
+RS_WORKSPACE = "/ABSOLUTE/PATH/TO/rs-mcp-agent/workspace"
 ```
 
-The server exposes:
+Windows example:
 
-`inspect_raster`, `preflight_plan`, `list_models`, `run_object_detection`, `run_oriented_detection`, `run_semantic_segmentation`, `run_instance_segmentation`, `run_change_detection`, `run_super_resolution`, `run_spectral_indices`, `calculate_statistics`, `quality_check_result`, `generate_report`, `get_job_status`, and `get_result_manifest`.
+```toml
+[mcp_servers.rs_remote_sensing]
+command = "python"
+args = ["-m", "rs_mcp.server"]
+cwd = "D:\\program_myself\\Myagent\\rs-mcp-agent"
+startup_timeout_sec = 20
+tool_timeout_sec = 600
+
+[mcp_servers.rs_remote_sensing.env]
+RS_SERVICE_URL = "http://127.0.0.1:8765"
+RS_WORKSPACE = "D:\\program_myself\\Myagent\\rs-mcp-agent\\workspace"
+```
+
+The MCP server communicates with the FastAPI backend only. If a tool reports that the service is not running, start it with `python scripts/run_api.py`.
