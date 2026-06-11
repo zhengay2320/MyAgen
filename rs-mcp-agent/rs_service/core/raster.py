@@ -142,9 +142,9 @@ def read_raster(path: str | Path) -> tuple[np.ndarray, dict[str, Any], RasterInf
                 profile["crs"] = dataset.crs.to_string() if dataset.crs else None
                 info = _profile_to_info(raster_path, profile, fallback=False)
                 return data, profile, info
-        except Exception:
+        except Exception as exc:
             # Fall through to the local fallback so tests can read pseudo rasters.
-            pass
+            rasterio_error = exc
 
     with raster_path.open("rb") as handle:
         loaded = np.load(handle, allow_pickle=False)

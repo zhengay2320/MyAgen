@@ -102,12 +102,12 @@ class OpenCDAdapter(BaseAdapter):
         assert self._inference_model is not None
         try:
             return self._inference_model(self.model, image_t1, image_t2)
-        except TypeError:
-            pass
+        except TypeError as exc:
+            first_signature_error = exc
         try:
             return self._inference_model(self.model, [image_t1, image_t2])
-        except TypeError:
-            pass
+        except TypeError as exc:
+            second_signature_error = exc
         stacked = np.concatenate([image_t1, image_t2], axis=-1)
         return self._inference_model(self.model, stacked)
 

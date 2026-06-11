@@ -6,7 +6,7 @@ from typing import Any, Callable, Literal
 
 from pydantic import BaseModel, Field
 
-from rs_service.core.manifest import new_job_id, read_json, write_json
+from rs_service.core.manifest import build_manifest, new_job_id, read_json, write_json
 from rs_service.settings import get_settings
 
 JobState = Literal["queued", "running", "success", "failed"]
@@ -126,7 +126,28 @@ class LocalJobStore:
             )
             return manifest
         except Exception as exc:
-            self.update_job(record.job_id, status="failed", errors=[str(exc)])
+            manifest = build_manifest(
+                task=task,
+                output_dir=output_dir,
+                inputs={"files": input_files or []},
+                outputs={},
+                parameters=parameters or {},
+                stats={},
+                quality_flags=[],
+                model={"id": model_id or "unknown", "backend": "unknown"},
+                status="failed",
+                errors=[str(exc)],
+            )
+            write_json(manifest["manifest_path"], manifest)
+            self.update_job(
+                record.job_id,
+                status="failed",
+                manifest_path=manifest["manifest_path"],
+                outputs={},
+                statistics={},
+                quality_flags=[],
+                errors=[str(exc)],
+            )
             raise
 
     def _write(self, record: JobRecord) -> None:

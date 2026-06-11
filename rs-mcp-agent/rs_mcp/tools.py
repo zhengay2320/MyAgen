@@ -162,9 +162,17 @@ def run_super_resolution(
     )
 
 
-def run_spectral_indices(image_path: str, indices: list[str] | None = None) -> dict[str, Any]:
+def run_spectral_indices(
+    image_path: str,
+    indices: list[str] | None = None,
+    band_map: dict[str, int] | None = None,
+    thresholds: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Submit a spectral index calculation job."""
-    return _client().post("/jobs/spectral-indices", _clean_payload({"image_path": image_path, "indices": indices or ["ndvi"]}))
+    return _client().post(
+        "/jobs/spectral-indices",
+        _clean_payload({"image_path": image_path, "indices": indices or ["ndvi"], "band_map": band_map, "thresholds": thresholds}),
+    )
 
 
 def calculate_statistics(job_id: str) -> dict[str, Any]:
@@ -239,7 +247,7 @@ def tool_definitions() -> list[dict[str, Any]]:
         {"name": "run_instance_segmentation", "description": "Submit an instance segmentation job.", "inputSchema": _schema({"image_path": string, "model_id": string, "tile_size": integer, "overlap": integer}, ["image_path"])},
         {"name": "run_change_detection", "description": "Submit a change detection job.", "inputSchema": _schema({"image_t1_path": string, "image_t2_path": string, "model_id": string, "tile_size": integer, "overlap": integer, "auto_align": {"type": "boolean"}}, ["image_t1_path", "image_t2_path"])},
         {"name": "run_super_resolution", "description": "Submit a super-resolution job.", "inputSchema": _schema({"image_path": string, "model_id": string, "scale": integer, "tile_size": integer, "overlap": integer, "reference_path": string}, ["image_path"])},
-        {"name": "run_spectral_indices", "description": "Submit a spectral index job.", "inputSchema": _schema({"image_path": string, "indices": array_string}, ["image_path"])},
+        {"name": "run_spectral_indices", "description": "Submit a spectral index job.", "inputSchema": _schema({"image_path": string, "indices": array_string, "band_map": {"type": "object"}, "thresholds": {"type": "object"}}, ["image_path"])},
         {"name": "calculate_statistics", "description": "Analyze an existing job.", "inputSchema": _schema({"job_id": string}, ["job_id"])},
         {"name": "quality_check_result", "description": "Quality-check an existing job.", "inputSchema": _schema({"job_id": string}, ["job_id"])},
         {"name": "generate_report", "description": "Generate a markdown report for an existing job.", "inputSchema": _schema({"job_id": string, "output_format": string}, ["job_id"])},

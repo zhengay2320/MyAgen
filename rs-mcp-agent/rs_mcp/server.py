@@ -149,9 +149,19 @@ def build_fastmcp_server() -> Any:
         )
 
     @mcp.tool()
-    def run_spectral_indices(image_path: str, indices: list[str] | None = None) -> dict[str, Any]:
+    def run_spectral_indices(
+        image_path: str,
+        indices: list[str] | None = None,
+        band_map: dict[str, int] | None = None,
+        thresholds: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Submit a spectral index job."""
-        return TOOL_FUNCTIONS["run_spectral_indices"](image_path=image_path, indices=indices or ["ndvi"])
+        return TOOL_FUNCTIONS["run_spectral_indices"](
+            image_path=image_path,
+            indices=indices or ["ndvi"],
+            band_map=band_map,
+            thresholds=thresholds,
+        )
 
     @mcp.tool()
     def calculate_statistics(job_id: str) -> dict[str, Any]:

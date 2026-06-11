@@ -36,7 +36,7 @@ def validate_raster_path(path: str | Path) -> Path:
         raise IsADirectoryError(f"Raster path is a directory: {raster_path}")
     try:
         with raster_path.open("rb"):
-            pass
+            readable = True
     except OSError as exc:
         raise PermissionError(f"Raster is not readable: {raster_path}") from exc
     return raster_path
@@ -67,9 +67,9 @@ def inspect_raster(path: str | Path) -> dict[str, Any]:
                     "driver": dataset.driver,
                     "warnings": warnings,
                 }
-        except Exception:
+        except Exception as exc:
             # Some tests use the local fallback raster container with a .tif suffix.
-            pass
+            rasterio_error = exc
 
     _, profile, info = read_raster(raster_path)
     if info.crs is None:
@@ -101,8 +101,8 @@ def read_window(path: str | Path, window: WindowLike, bands: Sequence[int] | int
                 rio_window = _to_rasterio_window(window)
                 data = dataset.read(indexes=normalized_bands, window=rio_window)
                 return ensure_chw(data)
-        except Exception:
-            pass
+        except Exception as exc:
+            rasterio_error = exc
 
     data, _, _ = read_raster(raster_path)
     x_off, y_off, width, height = _window_to_offsets(window)

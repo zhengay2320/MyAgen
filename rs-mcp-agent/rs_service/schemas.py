@@ -120,6 +120,8 @@ class SpectralIndexRequest(BaseModel):
     output_dir: str | None = None
     indices: list[str] | None = None
     band_mapping: dict[str, int] | None = None
+    band_map: dict[str, int] | None = None
+    thresholds: dict[str, Any] | None = None
     tile_size: int = Field(default=512, gt=0)
     overlap: int = Field(default=64, ge=0)
 

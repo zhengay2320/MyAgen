@@ -288,12 +288,17 @@ def run_spectral_indices(
     output_dir: str | None = None,
     indices: list[str] | None = None,
     band_mapping: dict[str, int] | None = None,
+    band_map: dict[str, int] | None = None,
+    thresholds: dict[str, Any] | None = None,
     tile_size: int = 512,
     overlap: int = 64,
 ) -> dict[str, Any]:
+    resolved_band_map = band_map or band_mapping
     parameters = {
         "indices": indices,
-        "band_mapping": band_mapping,
+        "band_mapping": resolved_band_map,
+        "band_map": resolved_band_map,
+        "thresholds": thresholds,
         "tile_size": tile_size,
         "overlap": overlap,
         "requested_output_dir": output_dir,
@@ -304,7 +309,9 @@ def run_spectral_indices(
             image_path,
             output_dir=job_output_dir,
             indices=indices,
-            band_mapping=band_mapping,
+            band_mapping=resolved_band_map,
+            band_map=resolved_band_map,
+            thresholds=thresholds,
             tile_size=tile_size,
             overlap=overlap,
         ),
@@ -498,4 +505,4 @@ def _update_job_record_from_manifest(manifest: dict[str, Any]) -> None:
             quality_flags=manifest.get("quality_flags", []),
         )
     except Exception:
-        pass
+        return

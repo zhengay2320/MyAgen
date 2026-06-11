@@ -31,7 +31,7 @@ def _json_default(value: Any) -> Any:
         if isinstance(value, np.ndarray):
             return value.tolist()
     except Exception:
-        pass
+        return str(value)
     if hasattr(value, "to_dict"):
         return value.to_dict()
     return str(value)
@@ -55,6 +55,7 @@ def build_manifest(
     out_dir = Path(output_dir)
     model_payload = model or {"id": "fake", "backend": "fake"}
     statistics = stats or {}
+    normalized_outputs = {str(key): str(value) for key, value in (outputs or {}).items()}
     manifest = {
         "schema_version": "0.1",
         "job_id": out_dir.name,
@@ -64,7 +65,7 @@ def build_manifest(
         "input_files": _collect_input_files(inputs),
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "parameters": parameters,
-        "outputs": outputs,
+        "outputs": normalized_outputs,
         "statistics": statistics,
         "metrics": metrics or {},
         "quality_flags": quality_flags or [],

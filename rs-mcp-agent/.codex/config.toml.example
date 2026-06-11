@@ -1,0 +1,11 @@
+[mcp_servers.rs_remote_sensing]
+command = "python"
+args = ["-m", "rs_mcp.server"]
+cwd = "/ABSOLUTE/PATH/TO/MyAgen/rs-mcp-agent"
+startup_timeout_sec = 20
+tool_timeout_sec = 600
+enabled = true
+
+[mcp_servers.rs_remote_sensing.env]
+RS_SERVICE_URL = "http://127.0.0.1:8765"
+RS_WORKSPACE = "/ABSOLUTE/PATH/TO/MyAgen/rs-mcp-agent/workspace"

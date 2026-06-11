@@ -11,7 +11,13 @@ build/
 
 workspace/*
 !workspace/.gitkeep
+workspace/outputs/
+workspace/cache/
+workspace/jobs/
+workspace/previews/
+workspace/reports/
 
+weights/
 *.pt
 *.pth
 *.ckpt
