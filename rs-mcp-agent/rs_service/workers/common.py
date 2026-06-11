@@ -65,24 +65,29 @@ def detection_payload(predictions: list[DetectionPrediction] | list[Any]) -> dic
     return {"predictions": [_prediction_to_dict(item) for item in predictions]}
 
 
-def instance_payload(predictions: list[InstancePrediction] | list[Any]) -> dict[str, Any]:
+def instance_payload(predictions: list[InstancePrediction] | list[Any], response_path: Path | None = None) -> dict[str, Any]:
     """Serialize instance predictions for the external adapter."""
     records: list[dict[str, Any]] = []
-    for item in predictions:
+    for index, item in enumerate(predictions):
         if isinstance(item, InstancePrediction):
-            records.append(
-                {
-                    "label": item.label,
-                    "score": item.score,
-                    "bbox": item.bbox,
-                    "mask_polygon": item.polygon,
-                    "polygon": item.polygon,
-                    "class_id": item.class_id,
-                    "attributes": item.attributes,
-                }
-            )
+            record = {
+                "label": item.label,
+                "score": item.score,
+                "bbox": item.bbox,
+                "mask_polygon": item.polygon,
+                "polygon": item.polygon,
+                "class_id": item.class_id,
+                "attributes": item.attributes,
+            }
+            if response_path is not None:
+                record["mask_path"] = write_array(response_path, f"instance_mask_{index}", item.mask.astype(np.uint8))
+            records.append(record)
         else:
-            records.append(dict(item))
+            record = dict(item)
+            mask = record.pop("mask", None)
+            if mask is not None and response_path is not None:
+                record["mask_path"] = write_array(response_path, f"instance_mask_{index}", np.asarray(mask, dtype=np.uint8))
+            records.append(record)
     return {"predictions": records}
 
 

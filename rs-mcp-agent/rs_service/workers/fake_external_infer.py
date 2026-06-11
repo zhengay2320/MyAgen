@@ -30,7 +30,7 @@ def handle(request: dict, response_path) -> dict:
     if task == "oriented_detection":
         return detection_payload(FakeOrientedDetectionAdapter().predict_tile(tile, info, **options))
     if task == "instance_segmentation":
-        return instance_payload(FakeInstanceSegmentationAdapter().predict_tile(tile, info, **options))
+        return instance_payload(FakeInstanceSegmentationAdapter().predict_tile(tile, info, **options), response_path)
     if task == "semantic_segmentation":
         prediction = FakeSemanticSegmentationAdapter().predict_tile(tile, info, **options)
         payload = {

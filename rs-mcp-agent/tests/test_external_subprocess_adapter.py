@@ -80,6 +80,29 @@ models:
         self.assertIn("bbox", predictions[0])
         self.assertEqual(predictions[0]["label"], "bright_object")
 
+    def test_subprocess_instance_mask_is_returned_from_npy(self) -> None:
+        """Instance workers should pass binary masks back through .npy files."""
+        self._write_models_yaml(
+            """
+models:
+  - id: fake_external_instance
+    task: instance_segmentation
+    backend: fake_external
+    framework: numpy
+    runner: subprocess
+    conda_env: null
+    entrypoint: rs_service.workers.fake_external_infer
+    runner_timeout_sec: 60
+"""
+        )
+        from rs_service.registry import get_adapter
+
+        adapter = get_adapter("instance_segmentation", model_id="fake_external_instance")
+        predictions = adapter.predict_tile(_bright_tile(), {"tile_id": "t0"})
+        self.assertGreaterEqual(len(predictions), 1)
+        self.assertEqual(predictions[0].mask.shape, (24, 24))
+        self.assertGreater(int(predictions[0].mask.sum()), 0)
+
     def test_subprocess_worker_failure_is_readable(self) -> None:
         """A missing worker module should return a clear subprocess error."""
         self._write_models_yaml(

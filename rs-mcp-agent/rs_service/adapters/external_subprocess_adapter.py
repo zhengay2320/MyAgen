@@ -167,6 +167,9 @@ class ExternalSubprocessAdapter(BaseAdapter):
             for key in ("mask_path", "probability_path", "image_path"):
                 if response.get(key):
                     response[f"{key}_array"] = np.load(Path(str(response[key])), allow_pickle=False)
+            for prediction in response.get("predictions", []):
+                if isinstance(prediction, dict) and prediction.get("mask_path"):
+                    prediction["mask_array"] = np.load(Path(str(prediction["mask_path"])), allow_pickle=False)
             return response
 
     def _command(self, request_path: Path, response_path: Path) -> list[str]:
@@ -254,7 +257,8 @@ def _detection_from_dict(item: dict[str, Any]) -> DetectionPrediction:
 
 def _instance_from_dict(item: dict[str, Any], shape: tuple[int, int]) -> InstancePrediction:
     """Convert a worker instance dictionary to a dataclass."""
-    mask = np.zeros(shape, dtype=np.uint8)
+    mask_value = item.get("mask_array")
+    mask = np.asarray(mask_value, dtype=np.uint8) if mask_value is not None else np.zeros(shape, dtype=np.uint8)
     polygon = _optional_points(item.get("mask_polygon") or item.get("polygon"))
     return InstancePrediction(
         label=str(item.get("label", item.get("class_name", "instance"))),

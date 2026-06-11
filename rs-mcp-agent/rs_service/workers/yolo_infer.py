@@ -11,7 +11,7 @@ def handle(request: dict, response_path) -> dict:
     task = str(request.get("task", config.get("task", "")))
     if task == "instance_segmentation":
         adapter = UltralyticsInstanceSegmentationAdapter(config)
-        return instance_payload(adapter.predict_tile(tile, tile_info(request), **kwargs(request)))
+        return instance_payload(adapter.predict_tile(tile, tile_info(request), **kwargs(request)), response_path)
     adapter = UltralyticsDetectionAdapter(config)
     return detection_payload(adapter.predict_tile(tile, tile_info(request), **kwargs(request)))
 
