@@ -118,6 +118,8 @@ Example:
 
 Do not commit large weights. Use `weights/`, `workspace/models/`, or absolute paths.
 
+For production deployments where YOLO, OpenMMLab, Open-CD, and SR stacks live in separate conda environments, use `runner: subprocess` model IDs such as `yolo_detection_subprocess` and see [docs/multi_env_runners.md](docs/multi_env_runners.md).
+
 ## Outputs
 
 Every pipeline writes a `manifest.json` containing:
