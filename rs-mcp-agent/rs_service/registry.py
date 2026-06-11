@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import ast
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from rs_service.adapters.fake import (
@@ -11,6 +14,7 @@ from rs_service.adapters.fake import (
     FakeSuperResolutionAdapter,
 )
 from rs_service.adapters.placeholders import framework_statuses
+from rs_service.settings import get_settings
 
 
 TASK_MODEL_IDS = {
@@ -22,233 +26,300 @@ TASK_MODEL_IDS = {
     "super_resolution": "fake_super_resolution",
 }
 
-REAL_MODEL_CONFIGS: dict[str, dict[str, Any]] = {
-    "yolo_detection": {
-        "id": "yolo_detection",
-        "task": "object_detection",
-        "backend": "ultralytics",
-        "framework": "ultralytics",
-        "weights": "weights/yolo_detection.pt",
-        "confidence_threshold": 0.25,
-        "iou_threshold": 0.45,
-        "device": "cpu",
-        "imgsz": 1024,
-    },
-    "sahi_yolo_detection": {
-        "id": "sahi_yolo_detection",
-        "task": "object_detection",
-        "backend": "sahi",
-        "framework": "sahi+ultralytics",
-        "weights": "weights/yolo_detection.pt",
-        "confidence_threshold": 0.25,
-        "device": "cpu",
-        "slice_height": 512,
-        "slice_width": 512,
-        "overlap_ratio": 0.2,
-    },
-    "yolo_instance_segmentation": {
-        "id": "yolo_instance_segmentation",
-        "task": "instance_segmentation",
-        "backend": "ultralytics",
-        "framework": "ultralytics",
-        "weights": "weights/yolo_instance.pt",
-        "confidence_threshold": 0.25,
-        "iou_threshold": 0.45,
-        "device": "cpu",
-        "imgsz": 1024,
-    },
-    "mmseg_segformer_landcover": {
-        "id": "mmseg_segformer_landcover",
-        "task": "semantic_segmentation",
-        "backend": "mmseg",
-        "framework": "mmsegmentation",
-        "config": "external/mmsegmentation/configs/segformer/segformer_landcover.py",
-        "checkpoint": "weights/mmseg_segformer_landcover.pth",
-        "device": "cpu",
-        "classes": ["background", "landcover"],
-    },
-    "mmseg_deeplab_building": {
-        "id": "mmseg_deeplab_building",
-        "task": "semantic_segmentation",
-        "backend": "mmseg",
-        "framework": "mmsegmentation",
-        "config": "external/mmsegmentation/configs/deeplabv3/deeplab_building.py",
-        "checkpoint": "weights/mmseg_deeplab_building.pth",
-        "device": "cpu",
-        "classes": ["background", "building"],
-    },
-    "mmdet_maskrcnn_instance": {
-        "id": "mmdet_maskrcnn_instance",
-        "task": "instance_segmentation",
-        "backend": "mmdet",
-        "framework": "mmdetection",
-        "config": "external/mmdetection/configs/mask_rcnn/mask-rcnn_remote_sensing.py",
-        "checkpoint": "weights/mmdet_maskrcnn_instance.pth",
-        "device": "cpu",
-        "classes": ["background", "target"],
-    },
-    "mmrotate_dota_oriented": {
-        "id": "mmrotate_dota_oriented",
-        "task": "oriented_detection",
-        "backend": "mmrotate",
-        "framework": "mmrotate",
-        "config": "external/mmrotate/configs/oriented_rcnn/oriented-rcnn_dota.py",
-        "checkpoint": "weights/mmrotate_dota_oriented.pth",
-        "device": "cpu",
-        "classes": ["plane", "ship", "storage-tank", "baseball-diamond", "tennis-court"],
-        "angle_unit": "auto",
-    },
-    "opencd_changer_building": {
-        "id": "opencd_changer_building",
-        "task": "change_detection",
-        "backend": "opencd",
-        "framework": "open-cd",
-        "config": "external/opencd/configs/changer/changer_building.py",
-        "checkpoint": "weights/opencd_changer_building.pth",
-        "device": "cpu",
-        "threshold": 0.5,
-    },
-    "opencd_changeformer_landcover": {
-        "id": "opencd_changeformer_landcover",
-        "task": "change_detection",
-        "backend": "opencd",
-        "framework": "open-cd",
-        "config": "external/opencd/configs/changeformer/changeformer_landcover.py",
-        "checkpoint": "weights/opencd_changeformer_landcover.pth",
-        "device": "cpu",
-        "threshold": 0.5,
-    },
-    "swinir_x2": {
-        "id": "swinir_x2",
-        "task": "super_resolution",
-        "backend": "swinir",
-        "framework": "swinir/torch",
-        "checkpoint": "weights/swinir_x2.pth",
-        "scale": 2,
-        "device": "cpu",
-    },
-    "swinir_x4": {
-        "id": "swinir_x4",
-        "task": "super_resolution",
-        "backend": "swinir",
-        "framework": "swinir/torch",
-        "checkpoint": "weights/swinir_x4.pth",
-        "scale": 4,
-        "device": "cpu",
-    },
-    "basicsr_x4": {
-        "id": "basicsr_x4",
-        "task": "super_resolution",
-        "backend": "basicsr",
-        "framework": "basicsr",
-        "config": "external/basicsr/options/sr_x4.yml",
-        "checkpoint": "weights/basicsr_x4.pth",
-        "scale": 4,
-        "device": "cpu",
-    },
-    "mmagic_sr_stub": {
-        "id": "mmagic_sr_stub",
-        "task": "super_resolution",
-        "backend": "mmagic",
-        "framework": "mmagic",
-        "config": "external/mmagic/configs/sr/sr_stub.py",
-        "checkpoint": "weights/mmagic_sr_stub.pth",
-        "scale": 4,
-        "device": "cpu",
-    },
+FAKE_ALIASES = {
+    "fake_detection": "object_detection",
+    "fake-yolo-sahi": "object_detection",
+    "fake_oriented_detection": "oriented_detection",
+    "fake-mmrotate": "oriented_detection",
+    "fake_segmentation": "semantic_segmentation",
+    "fake-mmseg": "semantic_segmentation",
+    "fake_instance": "instance_segmentation",
+    "fake-mmdet-instance": "instance_segmentation",
+    "fake_change": "change_detection",
+    "fake_change_detection": "change_detection",
+    "fake-opencd": "change_detection",
+    "fake_super_resolution": "super_resolution",
+    "fake-sr": "super_resolution",
 }
 
 
-def list_models() -> dict[str, Any]:
+def _fake_model_configs() -> dict[str, dict[str, Any]]:
+    """Return built-in fake model configs that are always available."""
     adapters = [
-        FakeDetectionAdapter().metadata.to_dict(),
-        FakeOrientedDetectionAdapter().metadata.to_dict(),
-        FakeSemanticSegmentationAdapter().metadata.to_dict(),
-        FakeInstanceSegmentationAdapter().metadata.to_dict(),
-        FakeChangeDetectionAdapter().metadata.to_dict(),
-        FakeSuperResolutionAdapter().metadata.to_dict(),
+        FakeDetectionAdapter(),
+        FakeOrientedDetectionAdapter(),
+        FakeSemanticSegmentationAdapter(),
+        FakeInstanceSegmentationAdapter(),
+        FakeChangeDetectionAdapter(),
+        FakeSuperResolutionAdapter(),
     ]
-    adapters.extend(
-        {
-            "id": config["id"],
-            "task": config["task"],
-            "backend": config["backend"],
-            "framework": config["framework"],
-            "weights": config.get("weights") or config.get("checkpoint"),
-            "config": config.get("config"),
-            "description": "Optional real model backend; loaded lazily only when selected.",
+    configs: dict[str, dict[str, Any]] = {}
+    for adapter in adapters:
+        metadata = adapter.metadata.to_dict()
+        configs[str(metadata["id"])] = {
+            "id": metadata["id"],
+            "task": metadata["task"],
+            "backend": metadata["backend"],
+            "framework": metadata["framework"],
+            "weights": metadata.get("weights"),
+            "description": metadata.get("description", ""),
         }
-        for config in REAL_MODEL_CONFIGS.values()
-    )
+    for model_id, task in FAKE_ALIASES.items():
+        configs.setdefault(
+            model_id,
+            {
+                "id": model_id,
+                "task": task,
+                "backend": "fake",
+                "framework": "numpy",
+                "weights": None,
+                "description": "Built-in fake adapter alias.",
+            },
+        )
+    return configs
+
+
+def list_models() -> dict[str, Any]:
+    """List built-in fake models plus models declared in configs/models.yaml."""
+    models = _merged_model_configs()
     return {
-        "models": adapters,
+        "models": [_public_model_config(config) for config in models.values()],
         "frameworks": framework_statuses(),
-        "stage": "fake-adapters-with-optional-real-models",
+        "stage": "yaml-configured-model-registry",
+        "models_config": str(_models_config_path()),
         "weights_policy": "Large weights are not committed. Use scripts/download_weights.py and workspace/models/*.",
     }
 
 
 def get_adapter(task: str, model_id: str | None = None, **kwargs: Any) -> Any:
+    """Instantiate an adapter from YAML config, falling back to fake models."""
     selected = model_id or TASK_MODEL_IDS.get(task)
-    if task == "object_detection" and selected in {"fake_detection", "fake-yolo-sahi"}:
-        return FakeDetectionAdapter()
-    if task == "oriented_detection" and selected in {"fake_oriented_detection", "fake-mmrotate"}:
-        return FakeOrientedDetectionAdapter()
-    if task == "semantic_segmentation" and selected in {"fake_segmentation", "fake-mmseg"}:
-        return FakeSemanticSegmentationAdapter()
-    if task == "instance_segmentation" and selected in {"fake_instance", "fake-mmdet-instance"}:
-        return FakeInstanceSegmentationAdapter()
-    if task == "change_detection" and selected in {"fake_change", "fake_change_detection", "fake-opencd"}:
-        return FakeChangeDetectionAdapter()
-    if task == "super_resolution" and selected in {"fake_super_resolution", "fake-sr"}:
-        return FakeSuperResolutionAdapter(scale=int(kwargs.get("scale", 2)))
-    if task == "super_resolution" and selected in {"swinir_x2", "swinir_x4"}:
-        from rs_service.adapters.swinir_adapter import SwinIRAdapter
+    config = _resolve_model_config(task, selected, kwargs)
+    backend = str(config.get("backend", "fake")).lower()
+    resolved_task = str(config.get("task") or task)
 
-        return SwinIRAdapter(_model_config(selected, kwargs))
-    if task == "super_resolution" and selected == "basicsr_x4":
-        from rs_service.adapters.basicsr_adapter import BasicSRAdapter
-
-        return BasicSRAdapter(_model_config(selected, kwargs))
-    if task == "super_resolution" and selected == "mmagic_sr_stub":
-        from rs_service.adapters.mmagic_adapter import MMagicSuperResolutionAdapter
-
-        return MMagicSuperResolutionAdapter(_model_config(selected, kwargs))
-    if task == "object_detection" and selected == "yolo_detection":
+    if backend == "fake":
+        return _fake_adapter(resolved_task, config, kwargs)
+    if resolved_task == "object_detection" and backend == "ultralytics":
         from rs_service.adapters.ultralytics_adapter import UltralyticsDetectionAdapter
 
-        return UltralyticsDetectionAdapter(_model_config(selected, kwargs))
-    if task == "object_detection" and selected == "sahi_yolo_detection":
+        return UltralyticsDetectionAdapter(config)
+    if resolved_task == "object_detection" and backend == "sahi":
         from rs_service.adapters.sahi_adapter import SahiDetectionAdapter
 
-        return SahiDetectionAdapter(_model_config(selected, kwargs))
-    if task == "instance_segmentation" and selected == "yolo_instance_segmentation":
+        return SahiDetectionAdapter(config)
+    if resolved_task == "instance_segmentation" and backend == "ultralytics":
         from rs_service.adapters.ultralytics_adapter import UltralyticsInstanceSegmentationAdapter
 
-        return UltralyticsInstanceSegmentationAdapter(_model_config(selected, kwargs))
-    if task == "semantic_segmentation" and selected in {"mmseg_segformer_landcover", "mmseg_deeplab_building"}:
-        from rs_service.adapters.mmseg_adapter import MMSegmentationAdapter
-
-        return MMSegmentationAdapter(_model_config(selected, kwargs))
-    if task == "instance_segmentation" and selected == "mmdet_maskrcnn_instance":
+        return UltralyticsInstanceSegmentationAdapter(config)
+    if resolved_task == "instance_segmentation" and backend == "mmdet":
         from rs_service.adapters.mmdet_adapter import MMDetectionInstanceAdapter
 
-        return MMDetectionInstanceAdapter(_model_config(selected, kwargs))
-    if task == "oriented_detection" and selected == "mmrotate_dota_oriented":
+        return MMDetectionInstanceAdapter(config)
+    if resolved_task == "semantic_segmentation" and backend == "mmseg":
+        from rs_service.adapters.mmseg_adapter import MMSegmentationAdapter
+
+        return MMSegmentationAdapter(config)
+    if resolved_task == "oriented_detection" and backend == "mmrotate":
         from rs_service.adapters.mmrotate_adapter import MMRotateDetectionAdapter
 
-        return MMRotateDetectionAdapter(_model_config(selected, kwargs))
-    if task == "change_detection" and selected in {"opencd_changer_building", "opencd_changeformer_landcover"}:
+        return MMRotateDetectionAdapter(config)
+    if resolved_task == "change_detection" and backend == "opencd":
         from rs_service.adapters.opencd_adapter import OpenCDAdapter
 
-        return OpenCDAdapter(_model_config(selected, kwargs))
-    raise ValueError(f"No adapter registered for task={task!r}, model_id={selected!r}")
+        return OpenCDAdapter(config)
+    if resolved_task == "super_resolution" and backend == "swinir":
+        from rs_service.adapters.swinir_adapter import SwinIRAdapter
+
+        return SwinIRAdapter(config)
+    if resolved_task == "super_resolution" and backend == "basicsr":
+        from rs_service.adapters.basicsr_adapter import BasicSRAdapter
+
+        return BasicSRAdapter(config)
+    if resolved_task == "super_resolution" and backend == "mmagic":
+        from rs_service.adapters.mmagic_adapter import MMagicSuperResolutionAdapter
+
+        return MMagicSuperResolutionAdapter(config)
+
+    fallback = TASK_MODEL_IDS.get(task)
+    if fallback and fallback != selected:
+        return get_adapter(task, model_id=fallback, **kwargs)
+    raise ValueError(f"No adapter registered for task={task!r}, model_id={selected!r}, backend={backend!r}")
 
 
-def _model_config(model_id: str, overrides: dict[str, Any]) -> dict[str, Any]:
-    """Return model config with runtime overrides and weight alias normalized."""
-    config = dict(REAL_MODEL_CONFIGS[model_id])
+def _fake_adapter(task: str, config: dict[str, Any], overrides: dict[str, Any]) -> Any:
+    """Instantiate a built-in fake adapter for a task."""
+    if task == "object_detection":
+        return FakeDetectionAdapter()
+    if task == "oriented_detection":
+        return FakeOrientedDetectionAdapter()
+    if task == "semantic_segmentation":
+        return FakeSemanticSegmentationAdapter()
+    if task == "instance_segmentation":
+        return FakeInstanceSegmentationAdapter()
+    if task == "change_detection":
+        return FakeChangeDetectionAdapter()
+    if task == "super_resolution":
+        return FakeSuperResolutionAdapter(scale=int(overrides.get("scale", config.get("scale", 2))))
+    raise ValueError(f"No fake adapter for task={task!r}")
+
+
+def _resolve_model_config(task: str, model_id: str | None, overrides: dict[str, Any]) -> dict[str, Any]:
+    """Resolve model config from YAML or fake fallback and apply runtime overrides."""
+    models = _merged_model_configs()
+    selected = model_id or TASK_MODEL_IDS.get(task)
+    config = dict(models.get(str(selected), {})) if selected else {}
+    if not config:
+        fallback = TASK_MODEL_IDS.get(task)
+        config = dict(models.get(str(fallback), {})) if fallback else {}
+    if not config:
+        raise ValueError(f"No model config found for task={task!r}, model_id={selected!r}")
+    if config.get("task") and task and config["task"] != task:
+        fallback = TASK_MODEL_IDS.get(task)
+        if fallback and fallback in models:
+            config = dict(models[fallback])
+        else:
+            raise ValueError(f"Model {selected!r} is registered for task={config.get('task')!r}, not {task!r}")
     config.update({key: value for key, value in overrides.items() if value is not None})
     if "weight" not in config and "weights" in config:
         config["weight"] = config["weights"]
+    if "weights" not in config and "weight" in config:
+        config["weights"] = config["weight"]
     return config
+
+
+def _public_model_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Return stable public model fields for /models."""
+    return {
+        "id": config.get("id"),
+        "task": config.get("task"),
+        "backend": config.get("backend"),
+        "framework": config.get("framework"),
+        "weights": config.get("weights") or config.get("weight") or config.get("checkpoint"),
+        "checkpoint": config.get("checkpoint"),
+        "config": config.get("config"),
+        "device": config.get("device"),
+        "classes": config.get("classes"),
+        "tile_size": config.get("tile_size"),
+        "overlap": config.get("overlap"),
+        "scale": config.get("scale"),
+        "description": config.get("description", "Configured model."),
+    }
+
+
+def _merged_model_configs() -> dict[str, dict[str, Any]]:
+    """Merge built-in fake configs with YAML configs, de-duplicated by id."""
+    merged = _fake_model_configs()
+    for model in _load_yaml_models():
+        model_id = model.get("id")
+        if model_id:
+            merged[str(model_id)] = model
+    return merged
+
+
+@lru_cache(maxsize=4)
+def _load_yaml_models_cached(path_text: str, mtime_ns: int) -> tuple[tuple[tuple[str, Any], ...], ...]:
+    """Load model records from YAML as hashable tuples for cache stability."""
+    path = Path(path_text)
+    models = _read_models_yaml(path)
+    return tuple(tuple(sorted(model.items())) for model in models)
+
+
+def _load_yaml_models() -> list[dict[str, Any]]:
+    """Load configured models from settings.RS_MODELS_CONFIG or configs/models.yaml."""
+    path = _models_config_path()
+    if not path.exists():
+        return []
+    cached = _load_yaml_models_cached(str(path.resolve()), path.stat().st_mtime_ns)
+    return [dict(items) for items in cached]
+
+
+def _models_config_path() -> Path:
+    """Return the current models.yaml path from settings."""
+    return Path(get_settings().models_config)
+
+
+def _read_models_yaml(path: Path) -> list[dict[str, Any]]:
+    """Read model entries using PyYAML when present, else a small project-local parser."""
+    text = path.read_text(encoding="utf-8")
+    try:
+        import yaml
+
+        payload = yaml.safe_load(text) or {}
+        models = payload.get("models", [])
+        return [dict(item) for item in models if isinstance(item, dict)]
+    except Exception:
+        return _parse_models_yaml_subset(text)
+
+
+def _parse_models_yaml_subset(text: str) -> list[dict[str, Any]]:
+    """Parse the models list from the repository's simple YAML without PyYAML."""
+    models: list[dict[str, Any]] = []
+    current: dict[str, Any] | None = None
+    pending_key: str | None = None
+    in_models = False
+    for raw_line in text.splitlines():
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        stripped = raw_line.strip()
+        if indent == 0:
+            in_models = stripped == "models:"
+            if not in_models and models:
+                break
+            continue
+        if not in_models:
+            continue
+        if indent == 2 and stripped.startswith("- "):
+            if current is not None:
+                models.append(current)
+            current = {}
+            pending_key = None
+            remainder = stripped[2:].strip()
+            if remainder:
+                key, value = _split_key_value(remainder)
+                current[key] = _parse_scalar(value)
+            continue
+        if current is None:
+            continue
+        if indent == 4 and stripped.startswith("- ") and pending_key:
+            current.setdefault(pending_key, []).append(_parse_scalar(stripped[2:].strip()))
+            continue
+        if indent >= 4 and ":" in stripped:
+            key, value = _split_key_value(stripped)
+            if value == "":
+                current[key] = []
+                pending_key = key
+            else:
+                current[key] = _parse_scalar(value)
+                pending_key = None
+    if current is not None:
+        models.append(current)
+    return models
+
+
+def _split_key_value(text: str) -> tuple[str, str]:
+    """Split a YAML key/value line once."""
+    key, value = text.split(":", 1)
+    return key.strip(), value.strip()
+
+
+def _parse_scalar(value: str) -> Any:
+    """Parse a simple YAML scalar or inline list."""
+    if value in {"", "null", "None", "~"}:
+        return None
+    if value in {"true", "True"}:
+        return True
+    if value in {"false", "False"}:
+        return False
+    if value.startswith("[") and value.endswith("]"):
+        try:
+            return ast.literal_eval(value)
+        except Exception:
+            return value
+    try:
+        if any(char in value for char in [".", "e", "E"]):
+            return float(value)
+        return int(value)
+    except ValueError:
+        return value.strip('"').strip("'")
