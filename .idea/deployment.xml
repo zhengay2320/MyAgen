@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="zhenganyang@192.168.210.237:6006 key" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
       <paths name="liuhaomiao@192.168.210.111:22 key">
         <serverdata>
@@ -9,6 +9,14 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="zhenganyang@192.168.210.237:6006 key">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/data/zhengay/Agent" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
   </component>
 </project>

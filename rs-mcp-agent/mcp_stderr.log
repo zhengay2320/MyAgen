@@ -1,0 +1,476 @@
+Traceback (most recent call last):
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\streams\memory.py", line 117, in receive
+    return self.receive_nowait()
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\streams\memory.py", line 112, in receive_nowait
+    raise WouldBlock
+anyio.WouldBlock
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\asyncio\base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\_backends\_asyncio.py", line 2341, in wrapper
+    return await func(*args)
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\mcp\server\fastmcp\server.py", line 756, in run_stdio_async
+    await self._mcp_server.run(
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\mcp\server\lowlevel\server.py", line 656, in run
+    async with AsyncExitStack() as stack:
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\contextlib.py", line 745, in __aexit__
+    raise exc_details[1]
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\contextlib.py", line 728, in __aexit__
+    cb_suppress = await cb(*exc_details)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\mcp\shared\session.py", line 238, in __aexit__
+    return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\_backends\_asyncio.py", line 803, in __aexit__
+    raise exc_val
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\mcp\server\lowlevel\server.py", line 673, in run
+    async with anyio.create_task_group() as tg:
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\_backends\_asyncio.py", line 803, in __aexit__
+    raise exc_val
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\mcp\server\lowlevel\server.py", line 675, in run
+    async for message in session.incoming_messages:
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\abc\_streams.py", line 35, in __anext__
+    return await self.receive()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\streams\memory.py", line 125, in receive
+    await receive_event.wait()
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\asyncio\locks.py", line 213, in wait
+    await fut
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "D:\program_myself\Myagent\rs-mcp-agent\rs_mcp\server.py", line 271, in <module>
+    main()
+  File "D:\program_myself\Myagent\rs-mcp-agent\rs_mcp\server.py", line 265, in main
+    build_fastmcp_server().run()
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\mcp\server\fastmcp\server.py", line 296, in run
+    anyio.run(self.run_stdio_async)
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\_core\_eventloop.py", line 77, in run
+    return async_backend.run(func, args, {}, backend_options)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\site-packages\anyio\_backends\_asyncio.py", line 2358, in run
+    return runner.run(wrapper())
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\45376\anaconda3\envs\rs-mcp-client\Lib\asyncio\runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt
+^CProcessing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListPromptsRequest
+Processing request of type PingRequest
+Processing request of type ListResourcesRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type PingRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
+Processing request of type ListToolsRequest
