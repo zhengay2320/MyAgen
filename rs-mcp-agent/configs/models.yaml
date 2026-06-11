@@ -183,6 +183,118 @@ models:
     checkpoint: weights/mmagic_sr_stub.pth
     scale: 4
     device: cpu
+  - id: yolo_detection_subprocess
+    task: object_detection
+    backend: ultralytics
+    framework: ultralytics
+    runner: subprocess
+    conda_env: rs-mcp-yolo
+    entrypoint: rs_service.workers.yolo_infer
+    runner_timeout_sec: 600
+    weights: weights/yolo_detection.pt
+    confidence_threshold: 0.25
+    iou_threshold: 0.45
+    device: cpu
+    imgsz: 1024
+  - id: sahi_yolo_detection_subprocess
+    task: object_detection
+    backend: sahi
+    framework: sahi+ultralytics
+    runner: subprocess
+    conda_env: rs-mcp-yolo
+    entrypoint: rs_service.workers.sahi_yolo_infer
+    runner_timeout_sec: 600
+    weights: weights/yolo_detection.pt
+    confidence_threshold: 0.25
+    device: cpu
+    slice_height: 512
+    slice_width: 512
+    overlap_ratio: 0.2
+  - id: yolo_instance_segmentation_subprocess
+    task: instance_segmentation
+    backend: ultralytics
+    framework: ultralytics
+    runner: subprocess
+    conda_env: rs-mcp-yolo
+    entrypoint: rs_service.workers.yolo_infer
+    runner_timeout_sec: 600
+    weights: weights/yolo_instance.pt
+    confidence_threshold: 0.25
+    iou_threshold: 0.45
+    device: cpu
+    imgsz: 1024
+  - id: mmseg_segformer_landcover_subprocess
+    task: semantic_segmentation
+    backend: mmseg
+    framework: mmsegmentation
+    runner: subprocess
+    conda_env: rs-mcp-openmmlab
+    entrypoint: rs_service.workers.mmseg_infer
+    runner_timeout_sec: 600
+    config: external/mmsegmentation/configs/segformer/segformer_landcover.py
+    checkpoint: weights/mmseg_segformer_landcover.pth
+    device: cpu
+    classes:
+      - background
+      - landcover
+    palette:
+      - [0, 0, 0]
+      - [60, 180, 75]
+  - id: mmdet_maskrcnn_instance_subprocess
+    task: instance_segmentation
+    backend: mmdet
+    framework: mmdetection
+    runner: subprocess
+    conda_env: rs-mcp-openmmlab
+    entrypoint: rs_service.workers.mmdet_infer
+    runner_timeout_sec: 600
+    config: external/mmdetection/configs/mask_rcnn/mask-rcnn_remote_sensing.py
+    checkpoint: weights/mmdet_maskrcnn_instance.pth
+    device: cpu
+    classes:
+      - background
+      - target
+  - id: mmrotate_dota_oriented_subprocess
+    task: oriented_detection
+    backend: mmrotate
+    framework: mmrotate
+    runner: subprocess
+    conda_env: rs-mcp-openmmlab
+    entrypoint: rs_service.workers.mmrotate_infer
+    runner_timeout_sec: 600
+    config: external/mmrotate/configs/oriented_rcnn/oriented-rcnn_dota.py
+    checkpoint: weights/mmrotate_dota_oriented.pth
+    device: cpu
+    angle_unit: auto
+    classes:
+      - plane
+      - ship
+      - storage-tank
+      - baseball-diamond
+      - tennis-court
+  - id: opencd_changer_building_subprocess
+    task: change_detection
+    backend: opencd
+    framework: open-cd
+    runner: subprocess
+    conda_env: rs-mcp-opencd
+    entrypoint: rs_service.workers.opencd_infer
+    runner_timeout_sec: 600
+    config: external/opencd/configs/changer/changer_building.py
+    checkpoint: weights/opencd_changer_building.pth
+    device: cpu
+    threshold: 0.5
+  - id: swinir_x4_subprocess
+    task: super_resolution
+    backend: swinir
+    framework: swinir/torch
+    runner: subprocess
+    conda_env: rs-mcp-sr
+    entrypoint: rs_service.workers.swinir_infer
+    runner_timeout_sec: 600
+    checkpoint: weights/swinir_x4.pth
+    scale: 4
+    device: cpu
 
 weight_roots:
   local: workspace/models

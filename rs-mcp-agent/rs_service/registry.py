@@ -97,7 +97,16 @@ def get_adapter(task: str, model_id: str | None = None, **kwargs: Any) -> Any:
     config = _resolve_model_config(task, selected, kwargs)
     backend = str(config.get("backend", "fake")).lower()
     resolved_task = str(config.get("task") or task)
+    runner = str(config.get("runner", "inprocess") or "inprocess").lower()
 
+    if runner == "subprocess":
+        from rs_service.adapters.external_subprocess_adapter import ExternalSubprocessAdapter
+
+        return ExternalSubprocessAdapter(config)
+    if runner == "http":
+        raise ValueError("runner=http is reserved for a future remote model service runner and is not implemented yet.")
+    if runner != "inprocess":
+        raise ValueError(f"Unsupported model runner={runner!r} for model_id={selected!r}.")
     if backend == "fake":
         return _fake_adapter(resolved_task, config, kwargs)
     if resolved_task == "object_detection" and backend == "ultralytics":
@@ -203,6 +212,10 @@ def _public_model_config(config: dict[str, Any]) -> dict[str, Any]:
         "tile_size": config.get("tile_size"),
         "overlap": config.get("overlap"),
         "scale": config.get("scale"),
+        "runner": config.get("runner", "inprocess"),
+        "conda_env": config.get("conda_env"),
+        "entrypoint": config.get("entrypoint"),
+        "runner_timeout_sec": config.get("runner_timeout_sec"),
         "description": config.get("description", "Configured model."),
     }
 
