@@ -118,7 +118,7 @@ Example:
 
 Do not commit large weights. Use `weights/`, `workspace/models/`, or absolute paths.
 
-For production deployments where YOLO, OpenMMLab, Open-CD, and SR stacks live in separate conda environments, use `runner: subprocess` model IDs such as `yolo_detection_subprocess` and see [docs/multi_env_runners.md](docs/multi_env_runners.md).
+普通 fake 模式不需要多 conda 环境。真实模型可使用 `*_subprocess` model_id，把 YOLO、OpenMMLab、Open-CD、SR 依赖放进独立环境；`rs-mcp-base` 不需要安装所有真实模型依赖。See [docs/multi_conda_workers.md](docs/multi_conda_workers.md).
 
 ## Outputs
 
