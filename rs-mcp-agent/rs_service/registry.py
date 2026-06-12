@@ -226,8 +226,20 @@ def _merged_model_configs() -> dict[str, dict[str, Any]]:
     for model in _load_yaml_models():
         model_id = model.get("id")
         if model_id:
-            merged[str(model_id)] = model
+            merged[str(model_id)] = _merge_duplicate_model_config(merged.get(str(model_id)), model)
     return merged
+
+
+def _merge_duplicate_model_config(existing: dict[str, Any] | None, candidate: dict[str, Any]) -> dict[str, Any]:
+    """Merge duplicate model IDs while preserving explicit subprocess runner configs."""
+    if existing is None:
+        return candidate
+    model_id = str(candidate.get("id") or existing.get("id") or "")
+    existing_runner = str(existing.get("runner", "") or "").lower()
+    candidate_runner = str(candidate.get("runner", "") or "").lower()
+    if model_id.endswith("_subprocess") and existing_runner == "subprocess" and candidate_runner != "subprocess":
+        return existing
+    return candidate
 
 
 @lru_cache(maxsize=4)

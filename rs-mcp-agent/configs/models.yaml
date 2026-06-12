@@ -135,7 +135,7 @@ models:
     task: oriented_detection
     backend: mmrotate
     framework: mmrotate
-    config: external/mmrotate/configs/oriented_rcnn/oriented-rcnn_dota.py
+    config: external/mmrotate/configs/oriented_rcnn/oriented_rcnn_r50_fpn_1x_dota_le90.py
     checkpoint: weights/mmrotate_dota_oriented.pth
     device: cpu
     angle_unit: auto

@@ -87,6 +87,44 @@ class ExternalSubprocessAdapterTests(unittest.TestCase):
         self.assertIsInstance(prediction, SuperResolutionPrediction)
         self.assertEqual(prediction.image.shape, (3, 48, 48))
 
+    def test_default_yolo_subprocess_uses_external_adapter(self) -> None:
+        """Default yolo_detection_subprocess must not instantiate Ultralytics in base env."""
+        self._use_default_models_yaml()
+        from rs_service.registry import get_adapter, list_models
+
+        adapter = get_adapter("object_detection", model_id="yolo_detection_subprocess")
+        self.assertIsInstance(adapter, ExternalSubprocessAdapter)
+        model = next(item for item in list_models()["models"] if item["id"] == "yolo_detection_subprocess")
+        self.assertEqual(model["runner"], "subprocess")
+        self.assertEqual(model["conda_env"], "rs-mcp-yolo")
+        self.assertEqual(model["entrypoint"], "rs_service.workers.yolo_infer")
+
+    def test_duplicate_subprocess_id_keeps_runner_config(self) -> None:
+        """A stale duplicate *_subprocess entry without runner should not override subprocess config."""
+        self._write_models_yaml(
+            """
+models:
+  - id: yolo_detection_subprocess
+    task: object_detection
+    backend: ultralytics
+    framework: ultralytics
+    runner: subprocess
+    conda_env: rs-mcp-yolo
+    entrypoint: rs_service.workers.yolo_infer
+    runner_timeout_sec: 600
+    weights: weights/yolo_detection.pt
+  - id: yolo_detection_subprocess
+    task: object_detection
+    backend: ultralytics
+    framework: ultralytics
+    weights: weights/yolo_detection.pt
+"""
+        )
+        from rs_service.registry import get_adapter
+
+        adapter = get_adapter("object_detection", model_id="yolo_detection_subprocess")
+        self.assertIsInstance(adapter, ExternalSubprocessAdapter)
+
     def test_registry_returns_external_adapter_for_subprocess_runner(self) -> None:
         """YAML runner=subprocess should route through ExternalSubprocessAdapter."""
         self._write_models_yaml(

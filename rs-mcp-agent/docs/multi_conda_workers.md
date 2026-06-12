@@ -63,6 +63,14 @@ python scripts/smoke_test_subprocess.py
 
 This checks direct adapter calls and tiled pipelines using only `fake_external_*` model IDs. It does not require conda, GPU, YOLO, OpenMMLab, Open-CD, SwinIR, BasicSR, or real weights.
 
+To diagnose YOLO subprocess routing on a deployment host, run:
+
+```bash
+python scripts/diagnose_yolo_subprocess.py
+```
+
+The output includes the current working directory, `RS_MODELS_CONFIG`, the resolved `models.yaml`, duplicate `yolo_detection_subprocess` entries, the resolved model config, the adapter type, and the `/models` entry fields. `adapter_type` should be `rs_service.adapters.external_subprocess_adapter.ExternalSubprocessAdapter`.
+
 ## Real Weights And Configs
 
 Weights are not committed. Use one of these paths and update `configs/models.yaml` if needed:
