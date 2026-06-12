@@ -36,7 +36,7 @@ models:
     runner: subprocess
     conda_env: null
     entrypoint: rs_service.workers.fake_external_infer
-    runner_timeout_sec: 120
+    runner_timeout_sec: 60
     weights: null
   - id: fake_external_oriented_detection
     task: oriented_detection
@@ -45,7 +45,7 @@ models:
     runner: subprocess
     conda_env: null
     entrypoint: rs_service.workers.fake_external_infer
-    runner_timeout_sec: 120
+    runner_timeout_sec: 60
     weights: null
   - id: fake_external_segmentation
     task: semantic_segmentation
@@ -54,7 +54,16 @@ models:
     runner: subprocess
     conda_env: null
     entrypoint: rs_service.workers.fake_external_infer
-    runner_timeout_sec: 120
+    runner_timeout_sec: 60
+    weights: null
+  - id: fake_external_instance
+    task: instance_segmentation
+    backend: fake_external
+    framework: numpy
+    runner: subprocess
+    conda_env: null
+    entrypoint: rs_service.workers.fake_external_infer
+    runner_timeout_sec: 60
     weights: null
   - id: fake_external_instance_segmentation
     task: instance_segmentation
@@ -63,7 +72,16 @@ models:
     runner: subprocess
     conda_env: null
     entrypoint: rs_service.workers.fake_external_infer
-    runner_timeout_sec: 120
+    runner_timeout_sec: 60
+    weights: null
+  - id: fake_external_change
+    task: change_detection
+    backend: fake_external
+    framework: numpy
+    runner: subprocess
+    conda_env: null
+    entrypoint: rs_service.workers.fake_external_infer
+    runner_timeout_sec: 60
     weights: null
   - id: fake_external_change_detection
     task: change_detection
@@ -72,7 +90,7 @@ models:
     runner: subprocess
     conda_env: null
     entrypoint: rs_service.workers.fake_external_infer
-    runner_timeout_sec: 120
+    runner_timeout_sec: 60
     weights: null
   - id: fake_external_super_resolution
     task: super_resolution
@@ -81,7 +99,7 @@ models:
     runner: subprocess
     conda_env: null
     entrypoint: rs_service.workers.fake_external_infer
-    runner_timeout_sec: 120
+    runner_timeout_sec: 60
     weights: null
     scale: 2
   - id: fake-yolo-sahi

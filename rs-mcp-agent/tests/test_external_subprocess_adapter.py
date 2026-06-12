@@ -8,6 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
+from rs_service.adapters.base import ChangePrediction, SegmentationPrediction, SuperResolutionPrediction
 from rs_service.adapters.external_subprocess_adapter import ExternalSubprocessAdapter
 from rs_service.settings import get_settings
 
@@ -34,6 +35,57 @@ class ExternalSubprocessAdapterTests(unittest.TestCase):
         self.assertNotIsInstance(adapter, ExternalSubprocessAdapter)
         predictions = adapter.predict_tile(_bright_tile(), {"tile_id": "t0"})
         self.assertGreaterEqual(len(predictions), 1)
+
+    def test_default_fake_external_models_are_available(self) -> None:
+        """Repository models.yaml should expose default fake_external subprocess models."""
+        self._use_default_models_yaml()
+        from rs_service.registry import get_adapter, list_models
+
+        model_ids = {item["id"] for item in list_models()["models"]}
+        for model_id in [
+            "fake_external_detection",
+            "fake_external_segmentation",
+            "fake_external_instance",
+            "fake_external_change",
+            "fake_external_super_resolution",
+        ]:
+            self.assertIn(model_id, model_ids)
+        adapter = get_adapter("object_detection", model_id="fake_external_detection")
+        self.assertIsInstance(adapter, ExternalSubprocessAdapter)
+
+    def test_default_fake_external_segmentation_returns_mask(self) -> None:
+        """Default fake_external_segmentation should return a tile mask."""
+        self._use_default_models_yaml()
+        from rs_service.registry import get_adapter
+
+        adapter = get_adapter("semantic_segmentation", model_id="fake_external_segmentation")
+        prediction = adapter.predict_tile(_bright_tile(), {"tile_id": "t0"})
+        self.assertIsInstance(prediction, SegmentationPrediction)
+        self.assertEqual(prediction.mask.shape, (24, 24))
+
+    def test_default_fake_external_change_accepts_tile_t2(self) -> None:
+        """Default fake_external_change should pass tile_t2 to the worker."""
+        self._use_default_models_yaml()
+        from rs_service.registry import get_adapter
+
+        tile = _bright_tile()
+        changed = tile.copy()
+        changed[:, 8:20, 8:20] = 20
+        adapter = get_adapter("change_detection", model_id="fake_external_change")
+        prediction = adapter.predict_tile(tile, {"tile_id": "t0"}, tile_t2=changed, threshold=0.1)
+        self.assertIsInstance(prediction, ChangePrediction)
+        self.assertEqual(prediction.probability.shape, (24, 24))
+        self.assertGreater(float(prediction.probability.max()), 0.0)
+
+    def test_default_fake_external_super_resolution_returns_image(self) -> None:
+        """Default fake_external_super_resolution should return an upscaled image."""
+        self._use_default_models_yaml()
+        from rs_service.registry import get_adapter
+
+        adapter = get_adapter("super_resolution", model_id="fake_external_super_resolution", scale=2)
+        prediction = adapter.predict_tile(_bright_tile(), {"tile_id": "t0"}, scale=2)
+        self.assertIsInstance(prediction, SuperResolutionPrediction)
+        self.assertEqual(prediction.image.shape, (3, 48, 48))
 
     def test_registry_returns_external_adapter_for_subprocess_runner(self) -> None:
         """YAML runner=subprocess should route through ExternalSubprocessAdapter."""
@@ -127,10 +179,32 @@ models:
         self.assertIn("Subprocess worker failed", message)
         self.assertIn("rs_service.workers.does_not_exist", message)
 
+    def test_runner_http_is_reserved_value_error(self) -> None:
+        """runner=http is reserved and should fail with the documented ValueError."""
+        self._write_models_yaml(
+            """
+models:
+  - id: future_http_detection
+    task: object_detection
+    backend: http
+    framework: remote
+    runner: http
+"""
+        )
+        from rs_service.registry import get_adapter
+
+        with self.assertRaises(ValueError) as raised:
+            get_adapter("object_detection", model_id="future_http_detection")
+        self.assertIn("runner=http is reserved", str(raised.exception))
+
     def _write_models_yaml(self, text: str) -> None:
         path = self.root / "models.yaml"
         path.write_text(text.strip() + "\n", encoding="utf-8")
         os.environ["RS_MODELS_CONFIG"] = str(path)
+        self._clear_registry_caches()
+
+    def _use_default_models_yaml(self) -> None:
+        os.environ["RS_MODELS_CONFIG"] = str(Path(__file__).resolve().parents[1] / "configs" / "models.yaml")
         self._clear_registry_caches()
 
     def _clear_registry_caches(self) -> None:

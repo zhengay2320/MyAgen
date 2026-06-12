@@ -54,6 +54,14 @@ make smoke
 
 This runs fake detection, oriented detection, semantic segmentation, instance segmentation, change detection, super-resolution, spectral indices, analysis, and report generation.
 
+To validate the multi-conda subprocess protocol without installing real model stacks, run:
+
+```bash
+python scripts/smoke_test_subprocess.py
+```
+
+普通 fake 模式不需要多 conda。真实模型部署时可以选择 `*_subprocess` model_id，让 YOLO、OpenMMLab、Open-CD、SwinIR/BasicSR 在独立 conda 环境运行；`rs-mcp-base` 只负责 MCP、FastAPI、GIS、切片、拼接、统计、报告和 manifest。See [multi_conda_workers.md](multi_conda_workers.md).
+
 ## 5. Start FastAPI
 
 ```bash
